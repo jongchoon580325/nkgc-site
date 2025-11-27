@@ -1,0 +1,356 @@
+[
+  {
+    "id": "dongbu",
+    "name": "동부시찰",
+    "leader": {
+      "name": "유병구",
+      "title": "목사"
+    },
+    "secretary": {
+      "name": "문보길",
+      "title": "목사"
+    },
+    "description": "남경기노회 동부 지역을 담당하는 시찰입니다.",
+    "churches": [
+      {
+        "name": "산본양문교회",
+        "pastor": "정영교",
+        "address": "경기 군포시 광정로 25-4 (금정동)",
+        "phone": "031-392-9191",
+        "mobile": "010-5297-0675",
+        "email": "sbymc@hanmail.net"
+      },
+      {
+        "name": "안산선한교회",
+        "pastor": "이덕재",
+        "address": "경기 안산시 단원구 선부광장1로32 칠성프러스타운 5층513호",
+        "phone": "031-505-9104",
+        "mobile": "010-4139-0694",
+        "email": "ldj6566@naver.com"
+      },
+      {
+        "name": "시화서부교회",
+        "pastor": "조충휘",
+        "address": "경기 시흥시 정왕신길로 49번길 7 (정왕동)",
+        "phone": "031-498-1684",
+        "mobile": "010-9764-9191",
+        "email": "cch9292@hanmail.net"
+      },
+      {
+        "name": "안산샘물교회",
+        "pastor": "문보길",
+        "address": "경기 안산시 상록구 광덕산2로 5-1 (월피동)",
+        "phone": "031-416-3722",
+        "mobile": "010-9777-1409",
+        "email": "bo-gil71@hanmail.net"
+      },
+      {
+        "name": "봉담언약교회",
+        "pastor": "김영회",
+        "address": "경기 화성시 봉담읍 삼천병마로 1314",
+        "phone": "031-298-9182",
+        "mobile": "010-8772-6818",
+        "email": "dcy333@hanmail.net"
+      },
+      {
+        "name": "큰빛교회",
+        "pastor": "이광현",
+        "address": "경기 안산시 상록구 본오로6길 14",
+        "phone": "070-4090-5437",
+        "mobile": "010-6412-5437",
+        "email": "byhope@hanmail.net"
+      },
+      {
+        "name": "선한교회",
+        "pastor": "박종경",
+        "address": "경기 군포시 광정로 59 (산본동)",
+        "phone": "031-000-0000",
+        "mobile": "010-5141-9125",
+        "email": "josephnu@hanmail.net"
+      },
+      {
+        "name": "사랑하는교회",
+        "pastor": "유병구",
+        "address": "서울시 광진구 중곡2동 38-3번지 3층",
+        "phone": "02-453-7171",
+        "mobile": "010-4324-0756",
+        "email": "dbqud5544@hanmail.net"
+      }
+    ]
+  },
+  {
+    "id": "seobu",
+    "name": "서부시찰",
+    "leader": {
+      "name": "남명철",
+      "title": "목사"
+    },
+    "secretary": {
+      "name": "김구",
+      "title": "목사"
+    },
+    "description": "남경기노회 서부 지역을 담당하는 시찰입니다.",
+    "churches": [
+      {
+        "name": "서광교회",
+        "pastor": "김구",
+        "address": "경기 군포시 한세로 66번길 3-9 (당정동)",
+        "phone": "031-444-4484",
+        "mobile": "010-7314-4486",
+        "email": "kgpaul@hanmail.net"
+      },
+      {
+        "name": "창세교회",
+        "pastor": "남명철",
+        "address": "경기 군포시 번영로 557번길42 (금정동)",
+        "phone": "031-441-8021",
+        "mobile": "010-7100-8291",
+        "email": "aynam@hanmail.net"
+      },
+      {
+        "name": "샬롬교회",
+        "pastor": "강경림",
+        "address": "경기 안양시 동안구 경수대로 623번길46 (호계동) 럭키아파트112동 701호",
+        "phone": "031-455-5986",
+        "mobile": "010-2258-5985"
+      },
+      {
+        "name": "복지중앙교회",
+        "pastor": "이원희",
+        "address": "경기 안산시 단원구 사세충열로 108 진아상가 101동 303호",
+        "phone": "031-402-7291",
+        "mobile": "010-4276-7291",
+        "email": "blisszone@naver.com"
+      },
+      {
+        "name": "한길교회",
+        "pastor": "노진경",
+        "address": "경기 안산시 상록구 반월새싹길 43",
+        "phone": "031-438-3679",
+        "mobile": "010-7146-0691",
+        "email": "hyang0091@naver.com"
+      },
+      {
+        "name": "지명교회",
+        "pastor": "곽성열",
+        "address": "경기 안산시 상록구 샘골로 95-13층",
+        "phone": "031-000-0000",
+        "mobile": "010-3746-9786",
+        "email": "syullkwak@hanmail.net"
+      },
+      {
+        "name": "예안교회",
+        "pastor": "김형석",
+        "address": "서울시 금천구 시흥대로 291 롯데캐슬골드파크3차상가205호",
+        "phone": "02-000-0000",
+        "mobile": "010-9281-7647",
+        "email": "goodmanhs73@hanmail.net"
+      },
+      {
+        "name": "주영광교회",
+        "pastor": "이상성",
+        "address": "충남 태안군 안면읍 삼봉길 100-26",
+        "phone": "000-000-0000",
+        "mobile": "010-4460-1509",
+        "email": "lssjand12@hanmail.net"
+      },
+      {
+        "name": "호산나교회",
+        "pastor": "정오성",
+        "address": "경기 안산시 단원구 고잔2길42 (동아아케이트5층)",
+        "phone": "031-000-0000",
+        "mobile": "010-4575-7957",
+        "email": "five7957@naver.com"
+      },
+      {
+        "name": "생명사랑교회",
+        "pastor": "박종승",
+        "address": "경기 평택시 평택5로 65",
+        "phone": "031-000-0000",
+        "mobile": "010-9398-6828",
+        "email": "goodmo1414@hanmail.net"
+      }
+    ]
+  },
+  {
+    "id": "nambu",
+    "name": "남부시찰",
+    "leader": {
+      "name": "김호철",
+      "title": "목사"
+    },
+    "secretary": {
+      "name": "조용구",
+      "title": "목사"
+    },
+    "description": "남경기노회 남부 지역을 담당하는 시찰입니다.",
+    "churches": [
+      {
+        "name": "조은교회",
+        "pastor": "김종수",
+        "address": "경기 수원시 권선구 구운중로33",
+        "phone": "031-269-4800",
+        "mobile": "010-5232-2963",
+        "email": "joeunmoksa@naver.com"
+      },
+      {
+        "name": "함께가는교회",
+        "pastor": "강명호",
+        "address": "충남 천안시 서북구 쌍용8길 22",
+        "phone": "041-575-0395",
+        "mobile": "010-3434-8291",
+        "email": "kmhsd2@hanmail.net"
+      },
+      {
+        "name": "새희망교회",
+        "pastor": "조용구",
+        "address": "경기 수원시 권선구 고산로6번길 45 대원아파트상가3층",
+        "phone": "031-227-0675",
+        "mobile": "010-2604-4531",
+        "email": "sand2020@hanmail.net"
+      },
+      {
+        "name": "새능력교회",
+        "pastor": "최영도",
+        "address": "경기 수원시 권선구 정조로378번길12",
+        "phone": "031-254-7981",
+        "mobile": "010-4391-1548",
+        "email": "cyd1207@hanmail.net"
+      },
+      {
+        "name": "수원양문교회",
+        "pastor": "박종권",
+        "address": "경기 수원시 장안구 장안로89번길17",
+        "phone": "031-268-0091",
+        "mobile": "010-3341-0091",
+        "email": "bobos1144@naver.com"
+      },
+      {
+        "name": "삼흥교회",
+        "pastor": "이규진",
+        "address": "서울시 금천구 시흥대로2길 60-15",
+        "phone": "02-803-3288",
+        "mobile": "010-9093-1214",
+        "email": "mike51@empas.com"
+      },
+      {
+        "name": "시흥은향교회",
+        "pastor": "김호철",
+        "address": "경기 시흥시 수인로3325번길49 201동 1303호",
+        "phone": "031-312-8291",
+        "mobile": "010-8291-8296",
+        "email": "hpkimm@naver.com"
+      },
+      {
+        "name": "동아시아등대교회",
+        "pastor": "오준철",
+        "address": "충남 서산시 팔봉면 대황2길 23-10",
+        "phone": "070-4412-1631",
+        "mobile": "010-2472-0175",
+        "email": "ojc826@hanmail.net"
+      },
+      {
+        "name": "사랑의교회",
+        "pastor": "박수규",
+        "address": "서울시 관악구 행운길 19 (행운동)",
+        "phone": "02-2226-7177",
+        "mobile": "010-3429-1698",
+        "email": "psg1028@naver.com"
+      }
+    ]
+  },
+  {
+    "id": "bukbu",
+    "name": "북부시찰",
+    "leader": {
+      "name": "우기종",
+      "title": "목사"
+    },
+    "secretary": {
+      "name": "이규봉",
+      "title": "목사"
+    },
+    "description": "남경기노회 북부 지역을 담당하는 시찰입니다.",
+    "churches": [
+      {
+        "name": "덕원교회",
+        "pastor": "우기종",
+        "address": "경기 안양시 동안구 경수대로623번길46 (호계동) 럭키상가3층",
+        "phone": "031-454-0235",
+        "mobile": "010-5344-9029",
+        "email": "glory009@naver.com"
+      },
+      {
+        "name": "행복한교회",
+        "pastor": "이흥근",
+        "address": "경기 의왕시 성고개로53 청계에이스타워204호",
+        "phone": "031-429-0190",
+        "mobile": "010-2662-0691",
+        "email": "pcymc@naver.com"
+      },
+      {
+        "name": "호계동산교회",
+        "pastor": "김인용",
+        "address": "경기 안양시 동안구 경수대로707번길52 일신apt101동708호",
+        "phone": "031-457-9102",
+        "mobile": "010-8286-9106",
+        "email": "hghill@naver.com"
+      },
+      {
+        "name": "큰숲나무교회",
+        "pastor": "김영일",
+        "address": "경기 안양시 동안구 귀인로 107-1",
+        "phone": "031-000-0000",
+        "mobile": "010-9500-1048",
+        "email": "habab@hanmail.net"
+      },
+      {
+        "name": "안양동성교회",
+        "pastor": "조형진",
+        "address": "경기 안양시 동안구 경수대로 606번길 (호계동) 봉성빌딩4층",
+        "phone": "031-477-0691",
+        "mobile": "010-0000-0000",
+        "email": "yyheaven@hanmail.net"
+      },
+      {
+        "name": "새순교회",
+        "pastor": "김대광",
+        "address": "경기 성남시 분당구 야탑로65번길 나인투빌딩403호",
+        "phone": "031-000-0000",
+        "mobile": "010-2066-7717",
+        "email": "kbk731@naver.com"
+      },
+      {
+        "name": "안디옥교회",
+        "pastor": "이규봉",
+        "address": "서울시 송파구 백제고분로22길7 신광빌딩",
+        "phone": "02-000-0000",
+        "mobile": "010-5046-7644",
+        "email": "lee31776@daum.net"
+      },
+      {
+        "name": "임마누엘교회",
+        "pastor": "장득영",
+        "address": "서울시 중랑구 용마산로361 (2층)",
+        "phone": "02-556-3927",
+        "mobile": "010-2393-0616",
+        "email": "flycskim@hanmail.net"
+      },
+      {
+        "name": "강남임마누엘교회",
+        "pastor": "김재철",
+        "address": "서울시 서초구 방배동 894-21",
+        "phone": "02-556-3927",
+        "mobile": "010-3865-0937"
+      },
+      {
+        "name": "평안교회",
+        "pastor": "정규천",
+        "address": "경기 의왕시 성고개로 161",
+        "phone": "031-385-0691",
+        "mobile": "010-3120-0366",
+        "email": "msjkc@hanmail.net"
+      }
+    ]
+  }
+]

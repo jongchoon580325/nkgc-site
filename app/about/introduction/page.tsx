@@ -1,0 +1,113 @@
+import type { Metadata } from 'next'
+import AdminOnly from '../../components/auth/AdminOnly'
+import fs from 'fs/promises'
+import path from 'path'
+
+interface Section {
+    heading: string
+    content?: string
+    items?: string[]
+}
+
+interface IntroductionData {
+    title: string
+    subtitle: string
+    description: string
+    sections: Section[]
+}
+
+async function getIntroductionData(): Promise<IntroductionData> {
+    const filePath = path.join(process.cwd(), 'data', 'introduction.json')
+    const fileContents = await fs.readFile(filePath, 'utf8')
+    return JSON.parse(fileContents)
+}
+
+export const metadata: Metadata = {
+    title: '노회소개 | 대한예수교 장로회 남경기노회',
+    description: '남경기노회 소개 - 4개 시찰 구성 및 관할 지역 안내',
+}
+
+export default async function IntroductionPage() {
+    const data = await getIntroductionData()
+
+    return (
+        <main className="min-h-screen bg-gray-50">
+            {/* Hero Section */}
+            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
+                <div className="container-custom">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4">{data.title}</h1>
+                    <p className="text-xl opacity-90">{data.subtitle}</p>
+                </div>
+            </section>
+
+            {/* Content Section */}
+            <section className="section-padding">
+                <div className="container-custom max-w-4xl">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+                        {/* Description */}
+                        <div className="mb-8 pb-8 border-b border-gray-200">
+                            <p className="text-lg text-gray-700 leading-relaxed">
+                                {data.description}
+                            </p>
+                        </div>
+
+                        {/* Sections */}
+                        <div className="space-y-8">
+                            {data.sections.map((section, index) => (
+                                <div key={index} className="space-y-4">
+                                    <h2 className="text-2xl font-bold text-primary-blue mb-4">
+                                        {section.heading}
+                                    </h2>
+
+                                    {section.content && (
+                                        <p className="text-gray-700 leading-relaxed">
+                                            {section.content}
+                                        </p>
+                                    )}
+
+                                    {section.items && (
+                                        <ul className="space-y-3">
+                                            {section.items.map((item, itemIndex) => (
+                                                <li
+                                                    key={itemIndex}
+                                                    className="flex items-center text-gray-700"
+                                                >
+                                                    <span className="w-2 h-2 bg-accent-600 rounded-full mr-3"></span>
+                                                    <span className="text-lg">{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Admin and Navigation Buttons */}
+                    <div className="mt-12 flex flex-col items-center space-y-4">
+                        {/* Admin Button */}
+                        <AdminOnly>
+                            <a
+                                href="/admin/introduction"
+                                className="inline-flex items-center px-8 py-4 bg-primary-blue text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                            >
+                                <svg
+                                    className="w-5 h-5 mr-2"
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                노회소개 수정 (관리자)
+                            </a>
+                        </AdminOnly>
+                    </div>
+                </div>
+            </section>
+        </main>
+    )
+}

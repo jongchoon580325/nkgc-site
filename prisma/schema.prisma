@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  
+  // 기본 정보
+  username      String    @unique
+  password      String
+  name          String
+  email         String?   @unique
+  phone         String
+  
+  // 교회 정보
+  churchName    String    @map("church_name")
+  position      String    // 목사, 장로, 전도사, 교인
+  role          String    @default("pending") // admin, pastor, elder, evangelist, member, pending
+  
+  // 승인 관련
+  isApproved    Boolean   @default(false) @map("is_approved")
+  approvedBy    Int?      @map("approved_by")
+  approvedAt    DateTime? @map("approved_at")
+  rejectedReason String?  @map("rejected_reason")
+  
+  // 기타
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  @@map("users")
+}
+
+model StandingCommittee {
+  id            Int      @id @default(autoincrement())
+  name          String   // Committee name (e.g., "공천부")
+  headTitle     String   @map("head_title") // Head title (e.g., "부장", "위원장", "국장")
+  head          String   // Head name
+  headRole      String   @map("head_role") // Head role (목사/장로)
+  secretary     String   // Secretary name
+  secretaryRole String   @map("secretary_role") // Secretary role (목사/장로)
+  members       String   // Comma-separated member names
+  term          String   // Term (e.g., "48회기 – 49회기 (2025년-2026년)")
+  displayOrder  Int      @map("display_order") // Order for display
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("standing_committees")
+}
+
+model Settings {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model SeparateRegistry {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  position           String
+  birthDate          String   @map("birth_date")
+  registrationDate   String   @map("registration_date")
+  registrationReason String   @map("registration_reason")
+  cancellationDate   String   @map("cancellation_date")
+  cancellationReason String   @map("cancellation_reason")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("separate_registries")
+}
+
+model Rule {
+  id        Int      @id @default(autoincrement())
+  type      String   @unique // 'PRESBYTERY' | 'COURTESY'
+  content   String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("rules")
+}
+
+model Resolution {
+  id           Int      @id @default(autoincrement())
+  tabType      String   @map("tab_type") // '1-20', '21-40', '41-60', '61-80'
+  meetingNum   Int      @map("meeting_num") // 정기회의 회기
+  sessionNum   Int?     @map("session_num") // 임시회의 회기 (임시인 경우에만)
+  meetingType  String   @default("정기") @map("meeting_type") // '정기' | '임시'
+  title        String
+  fileType     String   @map("file_type") // 'IMAGE' | 'PDF'
+  fileName     String   @map("file_name")
+  fileUrl      String   @map("file_url")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("resolutions")
+}
+
+model FeeStatus {
+  id          Int      @id @default(autoincrement())
+  inspection  String
+  churchName  String   @map("church_name")
+  pastorName  String   @map("pastor_name")
+  monthlyFee  Int      @map("monthly_fee")
+  annualFee   Int      @map("annual_fee")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("fee_statuses")
+}

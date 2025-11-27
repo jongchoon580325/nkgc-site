@@ -1,0 +1,180 @@
+{
+  "organizations": [
+    {
+      "id": "sunday-school",
+      "name": "주교연합회",
+      "president": "김유신",
+      "secretary": "강감찬",
+      "officers": [
+        {
+          "position": "회장",
+          "name": "이순신",
+          "role": "장로",
+          "church": "한산교회",
+          "phone": "010-1234-5678"
+        },
+        {
+          "position": "부회장",
+          "name": "",
+          "role": "",
+          "church": "",
+          "phone": ""
+        }
+      ],
+      "events": [
+        {
+          "month": "1월",
+          "name": "신년하례회",
+          "datetime": "1월첫째주",
+          "location": "대유평교회",
+          "notes": "회비 5만원"
+        }
+      ]
+    },
+    {
+      "id": "student",
+      "name": "학생면려회",
+      "president": "나종춘",
+      "secretary": "장명애",
+      "officers": [
+        {
+          "position": "회장",
+          "name": "나종춘",
+          "role": "목사",
+          "church": "대유평교회",
+          "phone": "010-222-4444"
+        },
+        {
+          "position": "부회장",
+          "name": "장명애",
+          "role": "장로",
+          "church": "대유평교회",
+          "phone": "010-333-2222"
+        }
+      ],
+      "events": [
+        {
+          "month": "1월",
+          "name": "신년하례회",
+          "datetime": "1월 첫째주",
+          "location": "대유평교회",
+          "notes": "회비 5만원"
+        }
+      ]
+    },
+    {
+      "id": "young-adult",
+      "name": "청장년면려회",
+      "president": "나종춘",
+      "secretary": "장명애",
+      "officers": [
+        {
+          "position": "회장",
+          "name": "나종춘",
+          "role": "목사",
+          "church": "대유평교회",
+          "phone": "010-2222-3333"
+        },
+        {
+          "position": "부회장",
+          "name": "장명애",
+          "role": "장로",
+          "church": "대유평교회",
+          "phone": "010-4444-2222"
+        }
+      ],
+      "events": [
+        {
+          "month": "1월 ",
+          "name": "신년하례회",
+          "datetime": "1월 첫째주",
+          "location": "대유평교회",
+          "notes": "회비 5만원"
+        }
+      ]
+    },
+    {
+      "id": "womens",
+      "name": "여전도회",
+      "president": "나종춘",
+      "secretary": "장명애",
+      "officers": [
+        {
+          "position": "회장",
+          "name": "나종춘",
+          "role": "목사",
+          "church": "대유평교회",
+          "phone": "010-1111-2222"
+        },
+        {
+          "position": "부회장",
+          "name": "장명애",
+          "role": "장로",
+          "church": "대유평교회",
+          "phone": "010-5555-4344"
+        }
+      ],
+      "events": [
+        {
+          "month": "1월",
+          "name": "신년하례회",
+          "datetime": "1월 첫째주",
+          "location": "대유평교회",
+          "notes": "회비 5만원"
+        }
+      ]
+    },
+    {
+      "id": "mens",
+      "name": "남전도회",
+      "president": "나종춘",
+      "secretary": "장명애",
+      "officers": [
+        {
+          "position": "회장",
+          "name": "나종춘",
+          "role": "목사",
+          "church": "서광교회",
+          "phone": "010-111-1111"
+        },
+        {
+          "position": "부회장",
+          "name": "장명애",
+          "role": "장로",
+          "church": "대유평교회",
+          "phone": "010-222-2222"
+        },
+        {
+          "position": "서기",
+          "name": "홍길동",
+          "role": "집사",
+          "church": "서광교회",
+          "phone": "011-222-33445"
+        },
+        {
+          "position": "총무",
+          "name": "나한나",
+          "role": "장로",
+          "church": "충현교회",
+          "phone": "010-444-5555"
+        }
+      ],
+      "events": [
+        {
+          "month": "1월",
+          "name": "신년하례뢰",
+          "datetime": "1월 첫째주",
+          "location": "대유평교회",
+          "notes": "회비 5만원"
+        },
+        {
+          "month": "2월",
+          "name": "신년부흥회",
+          "datetime": "2월 셋째주",
+          "location": "함께가는 교회",
+          "notes": "찬양준비"
+        }
+      ]
+    }
+  ]
+}
