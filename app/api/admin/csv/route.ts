@@ -32,6 +32,10 @@ const CSV_TEMPLATES = {
     'inspections': {
         headers: ['시찰ID', '시찰명', '시찰장', '시찰장직분', '서기', '서기직분', '설명', '교회명', '담임목사', '주소', '전화번호', '휴대전화', '이메일'],
         example: [] // Dynamic example
+    },
+    'organizations': {
+        headers: ['기관ID', '기관명', '회장', '서기', '임원구분', '임원이름', '임원직분', '임원교회', '임원연락처', '행사월', '행사명', '행사일시', '행사장소', '행사비고'],
+        example: [] // Dynamic example
     }
 };
 
@@ -244,6 +248,56 @@ export async function GET(request: NextRequest) {
                 csvContent = [template.headers.join(','), template.example.join(',')].join('\n');
             }
 
+        } else if (target === 'organizations') {
+            const filePath = path.join(process.cwd(), 'data', 'organizations.json');
+            let orgData = { organizations: [] };
+            try {
+                const fileContent = await fs.readFile(filePath, 'utf8');
+                orgData = JSON.parse(fileContent);
+            } catch (error) {
+                console.error('Failed to read organizations data:', error);
+            }
+
+            if (orgData.organizations && orgData.organizations.length > 0) {
+                const rows = [];
+                rows.push(template.headers.join(','));
+
+                orgData.organizations.forEach((org: any) => {
+                    // For each organization, we need to create rows for officers and events
+                    const maxRows = Math.max(
+                        org.officers?.length || 0,
+                        org.events?.length || 0,
+                        1 // At least one row for basic info
+                    );
+
+                    for (let i = 0; i < maxRows; i++) {
+                        const officer = org.officers?.[i];
+                        const event = org.events?.[i];
+
+                        const row = [
+                            i === 0 ? org.id : '', // Only first row has org ID
+                            i === 0 ? org.name : '',
+                            i === 0 ? org.president || '' : '',
+                            i === 0 ? org.secretary || '' : '',
+                            officer?.position || '',
+                            officer?.name || '',
+                            officer?.role || '',
+                            officer?.church || '',
+                            officer?.phone || '',
+                            event?.month || '',
+                            event?.name || '',
+                            event?.datetime || '',
+                            event?.location || '',
+                            event?.notes || ''
+                        ].map(field => `"${String(field).replace(/"/g, '""')}"`);
+                        rows.push(row.join(','));
+                    }
+                });
+                csvContent = rows.join('\n');
+            } else {
+                csvContent = [template.headers.join(','), template.example.join(',')].join('\n');
+            }
+
         } else {
             // Default static example
             csvContent = [
@@ -332,6 +386,9 @@ export async function POST(request: NextRequest) {
                 break;
             case 'inspections':
                 await importInspections(parsed.data);
+                break;
+            case 'organizations':
+                await importOrganizations(parsed.data);
                 break;
             default:
                 return NextResponse.json(
@@ -555,4 +612,59 @@ async function importInspections(data: any[]) {
     const filePath = path.join(process.cwd(), 'data', 'inspections.json');
     await fs.writeFile(filePath, JSON.stringify(newData, null, 2), 'utf8');
     console.log(`Imported ${newData.length} inspections`);
+}
+
+async function importOrganizations(data: any[]) {
+    // Group by organization ID
+    const orgsMap = new Map();
+
+    data.forEach(row => {
+        const id = row['기관ID'];
+        if (!id) return;
+
+        if (!orgsMap.has(id)) {
+            orgsMap.set(id, {
+                id: id,
+                name: row['기관명'] || '',
+                president: row['회장'] || '',
+                secretary: row['서기'] || '',
+                officers: [],
+                events: []
+            });
+        }
+
+        const org = orgsMap.get(id);
+
+        // Add officer if position is provided
+        const officerPosition = row['임원구분'];
+        if (officerPosition) {
+            org.officers.push({
+                position: officerPosition,
+                name: row['임원이름'] || '',
+                role: row['임원직분'] || '',
+                church: row['임원교회'] || '',
+                phone: row['임원연락처'] || ''
+            });
+        }
+
+        // Add event if month is provided
+        const eventMonth = row['행사월'];
+        if (eventMonth) {
+            org.events.push({
+                month: eventMonth,
+                name: row['행사명'] || '',
+                datetime: row['행사일시'] || '',
+                location: row['행사장소'] || '',
+                notes: row['행사비고'] || ''
+            });
+        }
+    });
+
+    const newData = {
+        organizations: Array.from(orgsMap.values())
+    };
+
+    const filePath = path.join(process.cwd(), 'data', 'organizations.json');
+    await fs.writeFile(filePath, JSON.stringify(newData, null, 2), 'utf8');
+    console.log(`Imported ${newData.organizations.length} organizations`);
 }

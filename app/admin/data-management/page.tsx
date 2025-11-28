@@ -17,6 +17,7 @@ const IMPORT_TARGETS: ImportTarget[] = [
     { id: 'current-officers', name: '현직임원 관리', description: '현재 노회 임원 명단' },
     { id: 'past-officers', name: '역대임원 관리', description: '역대 노회 임원 명단' },
     { id: 'inspections', name: '시찰 관리', description: '시찰회 및 소속 교회 관리' },
+    { id: 'organizations', name: '기관 관리', description: '노회 기관 정보 관리' },
 ];
 
 export default function DataManagementPage() {
