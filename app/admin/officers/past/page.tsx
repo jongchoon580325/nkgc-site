@@ -217,7 +217,7 @@ export default function AdminPastOfficersPage() {
                                             </label>
                                             <input
                                                 type="text"
-                                                value={yearData.officers[position]}
+                                                value={yearData.officers[position as keyof YearOfficers['officers']]}
                                                 onChange={(e) =>
                                                     handleOfficerChange(
                                                         yearIndex,
