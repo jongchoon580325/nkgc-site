@@ -200,6 +200,132 @@ export default function FeesStatusAdminPage() {
         }
     }
 
+    // CSV Export
+    const handleExportCSV = () => {
+        if (fees.length === 0) {
+            alert('내보낼 데이터가 없습니다.')
+            return
+        }
+
+        const headers = ['시찰', '교회명', '담임목사', '월회비', '연회비']
+        const rows = fees.map(f => [
+            f.inspection,
+            f.churchName,
+            f.pastorName,
+            f.monthlyFee.toString(),
+            f.annualFee.toString()
+        ])
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n')
+
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `상회비현황_${new Date().toISOString().split('T')[0]}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        showMessage('success', 'CSV 파일이 다운로드되었습니다.')
+    }
+
+    // CSV Import
+    const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        try {
+            const text = await file.text()
+
+            // Use PapaParse for proper CSV parsing
+            const Papa = (await import('papaparse')).default
+            const result = Papa.parse(text, {
+                header: false,
+                skipEmptyLines: true
+            })
+
+            if (!result.data || result.data.length < 2) {
+                showMessage('error', 'CSV 파일이 비어있거나 형식이 올바르지 않습니다.')
+                return
+            }
+
+            // Skip header row
+            const dataRows = result.data.slice(1) as string[][]
+            const importData: any[] = []
+
+            for (const cols of dataRows) {
+                if (cols.length >= 5) {
+                    importData.push({
+                        inspection: cols[0]?.trim() || '동부',
+                        churchName: cols[1]?.trim() || '',
+                        pastorName: cols[2]?.trim() || '',
+                        monthlyFee: parseInt(cols[3]?.replace(/[^0-9]/g, '') || '0'),
+                        annualFee: parseInt(cols[4]?.replace(/[^0-9]/g, '') || '0')
+                    })
+                }
+            }
+
+            if (importData.length === 0) {
+                showMessage('error', '유효한 데이터가 없습니다.')
+                return
+            }
+
+            // Confirm import with overwrite warning
+            if (!confirm(`⚠️ 경고: 기존 데이터를 모두 삭제하고 ${importData.length}개의 새 데이터로 덮어쓰시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                return
+            }
+
+            // Step 1: Delete all existing data
+            let deleteCount = 0
+            for (const fee of fees) {
+                try {
+                    const response = await fetch(`/api/admin/fees-status/${fee.id}`, {
+                        method: 'DELETE'
+                    })
+                    if (response.ok) {
+                        deleteCount++
+                    }
+                } catch (err) {
+                    console.error('Delete error:', err)
+                }
+            }
+
+            // Step 2: Import new data
+            let successCount = 0
+            let errorCount = 0
+
+            for (const data of importData) {
+                try {
+                    const response = await fetch('/api/admin/fees-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+
+                    if (response.ok) {
+                        successCount++
+                    } else {
+                        errorCount++
+                    }
+                } catch (err) {
+                    errorCount++
+                }
+            }
+
+            fetchFees()
+            showMessage('success', `덮어쓰기 완료: 삭제 ${deleteCount}개, 추가 성공 ${successCount}개, 실패 ${errorCount}개`)
+        } catch (err) {
+            showMessage('error', 'CSV 파일 처리 중 오류가 발생했습니다.')
+        }
+
+        e.target.value = '' // Reset input
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -255,10 +381,33 @@ export default function FeesStatusAdminPage() {
 
             {/* Fees List */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-gray-900">
                         상회비 목록 ({fees.length}개)
                     </h2>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleExportCSV}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            CSV 내보내기
+                        </button>
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center gap-2 cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            CSV 가져오기
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleImportCSV}
+                                className="hidden"
+                            />
+                        </label>
+                    </div>
                 </div>
 
                 {isLoading ? (
