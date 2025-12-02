@@ -231,6 +231,35 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
                 </table>
             </div>
 
+            {/* Action Buttons Group */}
+            <div className="mt-6 flex justify-end gap-3">
+                {/* Back to Main Exam Page Button (only for EXAM_DEPT and EXAM_USER) */}
+                {(boardType === 'EXAM_DEPT' || boardType === 'EXAM_USER') && (
+                    <Link
+                        href="/board/exam"
+                        className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        고시부 전체자료실로 가기
+                    </Link>
+                )}
+
+                {/* Write Button */}
+                {config.canWrite && (
+                    <Link
+                        href={`/board/${boardType}/write`}
+                        className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        글쓰기
+                    </Link>
+                )}
+            </div>
+
             {/* 페이지네이션 */}
             {totalPages > 1 && (
                 <div className="mt-6 flex justify-center items-center gap-2">
