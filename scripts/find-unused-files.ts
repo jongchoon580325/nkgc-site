@@ -25,26 +25,65 @@ async function findUnusedFiles() {
 
     console.log('데이터베이스에서 사용 중인 파일 목록 가져오는 중...');
 
-    // 모든 첨부파일 경로 가져오기
+    // 1. Attachment 테이블 조회
     const attachments = await prisma.attachment.findMany({
-        select: {
-            fileUrl: true,
-        },
+        select: { fileUrl: true },
     });
 
-    // 사용 중인 파일 경로 Set 생성 (빠른 검색을 위해)
-    const usedFiles = new Set(
-        attachments.map(att => {
-            // fileUrl이 절대 경로인 경우 상대 경로로 변환
-            let filePath = att.fileUrl;
-            if (filePath.startsWith('/wp-content/')) {
-                filePath = path.join(process.cwd(), 'public', filePath);
-            } else if (filePath.startsWith('wp-content/')) {
-                filePath = path.join(process.cwd(), 'public', filePath);
+    // 2. Post 본문 내 이미지 조회
+    const posts = await prisma.post.findMany({
+        select: { content: true },
+        where: {
+            content: { contains: 'wp-content/uploads' }
+        }
+    });
+
+    // 3. Resolution 테이블 조회
+    const resolutions = await prisma.resolution.findMany({
+        select: { fileUrl: true },
+    });
+
+    // 사용 중인 파일 경로 Set 생성
+    const usedFiles = new Set<string>();
+
+    // Helper: URL을 로컬 경로로 변환 및 등록
+    const addUrlToSet = (url: string) => {
+        if (!url) return;
+
+        try {
+            // URL 디코딩 (한글 파일명 등 처리)
+            const decodedUrl = decodeURIComponent(url);
+
+            let filePath = decodedUrl;
+            // URL에서 쿼리 스트링 제거
+            filePath = filePath.split('?')[0];
+
+            // 절대 경로/상대 경로 통일
+            if (filePath.includes('/wp-content/uploads/')) {
+                const relativePath = filePath.split('/wp-content/uploads/')[1];
+                const fullPath = path.join(process.cwd(), 'public/wp-content/uploads', relativePath);
+                usedFiles.add(path.normalize(fullPath));
             }
-            return path.normalize(filePath);
-        })
-    );
+        } catch (e) {
+            console.error('URL 처리 중 오류:', url, e);
+        }
+    };
+
+    // Attachment 처리
+    attachments.forEach(att => addUrlToSet(att.fileUrl));
+
+    // Resolution 처리
+    resolutions.forEach(res => addUrlToSet(res.fileUrl));
+
+    // Post 본문 처리 (정규식으로 이미지 URL 추출)
+    const imgRegex = /src=["']([^"']+)["']/g;
+    posts.forEach(post => {
+        if (!post.content) return;
+        let match;
+        while ((match = imgRegex.exec(post.content)) !== null) {
+            addUrlToSet(match[1]);
+        }
+    });
 
     console.log(`데이터베이스에 등록된 파일: ${usedFiles.size}개`);
     console.log('업로드 폴더 스캔 중...');
