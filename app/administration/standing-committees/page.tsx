@@ -185,7 +185,7 @@ export default function StandingCommitteesPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-700 text-center">
+                                                    <div className="font-medium text-gray-900 text-left">
                                                         {committee.members || '-'}
                                                     </div>
                                                 </td>
