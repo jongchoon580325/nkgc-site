@@ -103,7 +103,7 @@ export default function VideoSettingsPage() {
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">게시글 관리 ({posts.length}개)</h2>
                     <Link
-                        href="/board/VIDEO/write"
+                        href="/board/VIDEO/write?returnUrl=/admin/video-settings"
                         className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     >
                         새 게시글 작성
@@ -140,7 +140,7 @@ export default function VideoSettingsPage() {
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex justify-center gap-2">
                                             <Link
-                                                href={`/board/VIDEO/edit/${post.id}`}
+                                                href={`/board/VIDEO/edit/${post.id}?returnUrl=/admin/video-settings`}
                                                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                                             >
                                                 수정

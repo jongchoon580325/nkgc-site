@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 import FileUploader from './FileUploader';
 import QuillEditor from './QuillEditor';
+
+// ReactQuill dynamic import for SSR prevention
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+import 'react-quill-new/dist/quill.snow.css';
 
 interface PostEditProps {
     boardType: BoardType;
@@ -23,8 +27,12 @@ interface Attachment {
 
 export default function PostEdit({ boardType, postId }: PostEditProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session, status } = useSession();
     const config = BOARD_CONFIG[boardType];
+
+    // Get returnUrl from query params
+    const returnUrl = searchParams.get('returnUrl');
 
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
@@ -151,7 +159,9 @@ export default function PostEdit({ boardType, postId }: PostEditProps) {
             }
 
             alert('게시글이 수정되었습니다.');
-            router.push(`/board/${boardType}/${postId}`);
+            // Use returnUrl if provided, otherwise default to post detail page
+            const redirectUrl = returnUrl || `/board/${boardType}/${postId}`;
+            router.push(redirectUrl);
         } catch (error) {
             console.error('Error updating post:', error);
             alert(error instanceof Error ? error.message : '게시글 수정 중 오류가 발생했습니다.');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
@@ -26,11 +26,15 @@ export default function PostWrite({ boardType }: PostWriteProps) {
     const [authorName, setAuthorName] = useState(''); // 작성자 이름
 
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session, status } = useSession();
 
     const config = BOARD_CONFIG[boardType];
     const userRole = session?.user?.role;
     const isAdmin = userRole === 'admin' || userRole === 'ADMIN';
+
+    // Get returnUrl from query params
+    const returnUrl = searchParams.get('returnUrl');
 
     useEffect(() => {
         // Fetch categories for this board
@@ -121,7 +125,9 @@ export default function PostWrite({ boardType }: PostWriteProps) {
             });
 
             if (res.ok) {
-                router.push(`/board/${boardType}`);
+                // Use returnUrl if provided, otherwise default to board page
+                const redirectUrl = returnUrl || `/board/${boardType}`;
+                router.push(redirectUrl);
                 router.refresh();
             } else {
                 const data = await res.json();
