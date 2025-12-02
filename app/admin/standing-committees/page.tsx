@@ -254,6 +254,125 @@ export default function StandingCommitteesAdminPage() {
         }
     }
 
+    // CSV Export
+    const handleExportCSV = () => {
+        if (committees.length === 0) {
+            alert('내보낼 데이터가 없습니다.')
+            return
+        }
+
+        const headers = ['상비부명', '직책종류', '부장/위원장/국장', '역할', '서기', '서기역할', '위원', '회기', '표시순서']
+        const rows = committees.map(c => [
+            c.name,
+            c.headTitle,
+            c.head,
+            c.headRole,
+            c.secretary,
+            c.secretaryRole,
+            c.members,
+            c.term,
+            c.displayOrder.toString()
+        ])
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n')
+
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `상비부_${new Date().toISOString().split('T')[0]}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        showMessage('success', 'CSV 파일이 다운로드되었습니다.')
+    }
+
+    // CSV Import
+    const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const reader = new FileReader()
+        reader.onload = async (event) => {
+            try {
+                const text = event.target?.result as string
+                const lines = text.split('\n').filter(line => line.trim())
+
+                if (lines.length < 2) {
+                    showMessage('error', 'CSV 파일이 비어있거나 형식이 올바르지 않습니다.')
+                    return
+                }
+
+                // Skip header
+                const dataLines = lines.slice(1)
+                const importData: any[] = []
+
+                for (const line of dataLines) {
+                    const cols = line.split(',').map(col => col.replace(/^"|"$/g, '').trim())
+
+                    if (cols.length >= 9) {
+                        importData.push({
+                            name: cols[0],
+                            headTitle: cols[1],
+                            head: cols[2],
+                            headRole: cols[3],
+                            secretary: cols[4],
+                            secretaryRole: cols[5],
+                            members: cols[6],
+                            term: cols[7],
+                            displayOrder: parseInt(cols[8]) || 999
+                        })
+                    }
+                }
+
+                if (importData.length === 0) {
+                    showMessage('error', '유효한 데이터가 없습니다.')
+                    return
+                }
+
+                // Confirm import
+                if (!confirm(`${importData.length}개의 상비부 데이터를 가져오시겠습니까?\n기존 데이터는 유지되며 새로운 데이터만 추가됩니다.`)) {
+                    return
+                }
+
+                // Import data
+                let successCount = 0
+                let errorCount = 0
+
+                for (const data of importData) {
+                    try {
+                        const response = await fetch('/api/admin/standing-committees', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        })
+
+                        if (response.ok) {
+                            successCount++
+                        } else {
+                            errorCount++
+                        }
+                    } catch (err) {
+                        errorCount++
+                    }
+                }
+
+                fetchCommittees()
+                showMessage('success', `가져오기 완료: 성공 ${successCount}개, 실패 ${errorCount}개`)
+            } catch (err) {
+                showMessage('error', 'CSV 파일 처리 중 오류가 발생했습니다.')
+            }
+        }
+
+        reader.readAsText(file)
+        e.target.value = '' // Reset input
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -386,10 +505,33 @@ export default function StandingCommitteesAdminPage() {
 
             {/* Committees List */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-gray-900">
                         상비부 목록 ({committees.length}개)
                     </h2>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleExportCSV}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            CSV 내보내기
+                        </button>
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center gap-2 cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            CSV 가져오기
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleImportCSV}
+                                className="hidden"
+                            />
+                        </label>
+                    </div>
                 </div>
 
                 {isLoading ? (
