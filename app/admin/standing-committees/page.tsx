@@ -336,12 +336,27 @@ export default function StandingCommitteesAdminPage() {
                 return
             }
 
-            // Confirm import
-            if (!confirm(`${importData.length}개의 상비부 데이터를 가져오시겠습니까?\n기존 데이터는 유지되며 새로운 데이터만 추가됩니다.`)) {
+            // Confirm import with overwrite warning
+            if (!confirm(`⚠️ 경고: 기존 데이터를 모두 삭제하고 ${importData.length}개의 새 데이터로 덮어쓰시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
                 return
             }
 
-            // Import data
+            // Step 1: Delete all existing data
+            let deleteCount = 0
+            for (const committee of committees) {
+                try {
+                    const response = await fetch(`/api/admin/standing-committees/${committee.id}`, {
+                        method: 'DELETE'
+                    })
+                    if (response.ok) {
+                        deleteCount++
+                    }
+                } catch (err) {
+                    console.error('Delete error:', err)
+                }
+            }
+
+            // Step 2: Import new data
             let successCount = 0
             let errorCount = 0
 
@@ -364,7 +379,7 @@ export default function StandingCommitteesAdminPage() {
             }
 
             fetchCommittees()
-            showMessage('success', `가져오기 완료: 성공 ${successCount}개, 실패 ${errorCount}개`)
+            showMessage('success', `덮어쓰기 완료: 삭제 ${deleteCount}개, 추가 성공 ${successCount}개, 실패 ${errorCount}개`)
         } catch (err) {
             showMessage('error', 'CSV 파일 처리 중 오류가 발생했습니다.')
         }
