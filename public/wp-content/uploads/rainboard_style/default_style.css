@@ -1,0 +1,250 @@
+@charset 'utf-8';
+
+/* font */
+div.rainboard-wrapper.rainboard-custom,
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr td.rainboard-list-date,
+div.rainboard-wrapper.rainboard-custom .pagingNav a,
+div.rainboard-wrapper.rainboard-custom .noti-td .noti-icon , div.rainboard-wrapper.rainboard-custom div.setting-content.preview{
+	font-family: "Malgun Gothic", Dotum, Gulim, Helvetica, Arial, sans-serif;
+}
+div.rainboard-wrapper.rainboard-custom {
+	font-size: 12px;
+	color: #424242;
+}
+
+/* board-head */
+/* div.rainboard-wrapper.rainboard-custom .head-st {
+	background-color: ;
+	background-image: ;
+	background-repeat: ;
+	background-position: ;
+	border-width: ;
+	border-style: ;
+	border-color: ;
+	border-radius: ;
+	font-size: ;
+	color: ;
+	opacity: ;
+} */
+
+/* board */
+div.rainboard-wrapper.rainboard-custom span.entry_comment_count ,
+div.rainboard-wrapper.rainboard-custom span.icon-reply,
+div.rainboard-wrapper.rainboard-custom .pagingNav strong,
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr td.rainboard-list-title a:hover {
+	color: #333333;
+}
+div.rainboard-wrapper.rainboard-custom .pagingNav strong {
+	border-color: #333333;
+}
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr td.rainboard-list-title a:hover {
+	opacity: 0.8;
+}
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr td {
+	border-style: solid;
+	border-color: #cccccc;
+	padding-top: 14px;
+	padding-bottom: 14px;
+}
+
+/* board-head */
+div.rainboard-wrapper.rainboard-custom table#rainboard-table thead tr th {
+	border-width: 1px;
+	border-color: #A9A9A9;
+	background: #fcfcfc;
+}
+div.rainboard-wrapper.rainboard-custom table#rainboard-table thead tr th span {
+	font-size: 10pt;
+	text-decoration: ;
+	font-style: ;
+	font-weight: bold;
+	border-left-color: #e0e0e0;
+	color: #424242;
+}
+
+/* board-noti */
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr td.noti-td {
+	background: #f1f1f1;
+	/* opacity: ; */
+}
+div.rainboard-wrapper.rainboard-custom table#rainboard-table > tbody > tr > td.rainboard-list-title.noti-td > a {
+	text-decoration: ;
+	font-style: ;
+	font-weight: bold;
+	color: #000000;
+}
+div.rainboard-wrapper.rainboard-custom .noti-td .noti-icon {
+	background: #aaaaaa;
+	border-radius: 5px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #fff;
+	/* opacity: ; */
+}
+
+/* board-body*/
+div.rainboard-wrapper.rainboard-custom table#rainboard-table > tbody > tr > td.rainboard-list-title > a {
+	font-size: 13px;
+	text-decoration: ;
+	font-style: ;
+	font-weight: ;
+	color: #333;
+}
+
+/* button */
+div.rainboard-wrapper.rainboard-custom .rainboard-button {
+	background: #fff;
+	border-color: #a9a9a9;
+	color: #333;
+	font-size: 12px;
+	font-weight: bold;
+	border-radius: 3px;
+	border-width: ;
+}
+
+div.rainboard-wrapper.rainboard-custom table#rainboard-table tbody tr:hover {
+	background-color: per.rainboard-customtable#rainboard-tabl;
+}
+
+div.rainboard-wrapper .rainboard-section-wrapper a.section_tab{
+	background: #ffffff;
+    border: 1px solid;
+	border-color: #000000;
+    border-radius: 0px;
+    box-shadow: none;
+    color: #000000;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 11px !important;
+    line-height: 11px;
+    padding: 7px 10px 6px !important;
+    text-decoration: none;
+    vertical-align: top;
+    width: auto;
+}
+
+div.rainboard-wrapper .rainboard-section-wrapper a.section_tab.active {
+    background: #000000;
+    color: #ffffff;
+}
+/* search */
+div.rainboard-wrapper .rainboard-search input, div.rainboard-wrapper .rainboard-search select {
+	border: solid;
+	border-width: 1px;
+	border-radius: 0px;
+	border-color: #a9a9a9;
+	background-color: #ffffff;
+    color: #333333;
+}
+/* read-post  */
+div.rainboard-wrapper div#rainboard-read-table div.title-section {
+    background: #fcfcfc;
+    border: 1px solid;
+    border-color: #A9A9A9;
+    border-width: 1px 0;
+}
+div.rainboard-wrapper div#rainboard-read-table div.title-section h1, div.rainboard-wrapper div#rainboard-read-table div.title-section h2 {
+    color: #424242 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 위 CSS는 수정 불가합니다. 여기 아래서부터 추가 CSS를 입력할 수 있습니다. */

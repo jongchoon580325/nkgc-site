@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Metadata } from 'next'
+import PageHeader from '@/app/components/common/PageHeader';
 
 interface Member {
     id: number
@@ -69,13 +70,7 @@ export default function MembersStatusPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">노회원현황</h1>
-                    <p className="text-xl opacity-90">대한예수교 장로회 남경기노회</p>
-                </div>
-            </section>
+            <PageHeader title="노회원현황" />
 
             {/* Content Section */}
             <section className="section-padding">

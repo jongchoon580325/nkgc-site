@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import PageHeader from '@/app/components/common/PageHeader'
 
 interface SeparateRegistry {
     id: number
@@ -60,13 +61,7 @@ export default function SeparateRegistryPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">별명부</h1>
-                    <p className="text-xl opacity-90">대한예수교 장로회 남경기노회</p>
-                </div>
-            </section>
+            <PageHeader title="별명부" />
 
             {/* Content Section */}
             <section className="section-padding">
@@ -168,8 +163,8 @@ export default function SeparateRegistryPage() {
                                             key={page}
                                             onClick={() => handlePageChange(page)}
                                             className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                                                    ? 'bg-primary-blue text-white shadow-md'
-                                                    : 'text-gray-600 hover:bg-gray-100'
+                                                ? 'bg-primary-blue text-white shadow-md'
+                                                : 'text-gray-600 hover:bg-gray-100'
                                                 }`}
                                         >
                                             {page}

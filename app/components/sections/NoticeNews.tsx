@@ -1,66 +1,80 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
-interface Notice {
+export interface NoticePost {
     id: number
-    category: '노회공지' | '자립위원회' | '정회원전용'
+    boardType: string
+    category: string | null
     title: string
-    date: string
-    summary: string
+    content: string
+    createdAt: Date | string
+    authorName?: string | null
+    author: {
+        name: string
+    }
 }
 
-// Dummy data - will be replaced with actual API calls
-const dummyNotices: Notice[] = [
-    {
-        id: 1,
-        category: '노회공지',
-        title: '제 49회 정기노회 개최 안내',
-        date: '2024-03-15',
-        summary:
-            '2024년 제 49회 정기노회가 4월 10일 오전 10시에 개최됩니다.',
-    },
-    {
-        id: 2,
-        category: '자립위원회',
-        title: '2024년 자립교회 지원 사업 공고',
-        date: '2024-03-10',
-        summary: '미자립교회 지원을 위한 2024년 사업 계획을 안내드립니다.',
-    },
-    {
-        id: 3,
-        category: '노회공지',
-        title: '노회 상회비 납부 안내',
-        date: '2024-03-05',
-        summary: '2024년도 상회비 납부 기한 및 계좌 안내입니다.',
-    },
-    {
-        id: 4,
-        category: '정회원전용',
-        title: '정회원 총회 개최 안내',
-        date: '2024-03-01',
-        summary: '정회원 총회가 3월 25일에 개최됩니다.',
-    },
-]
-
-const categoryColors = {
-    노회공지: 'bg-blue-100 text-blue-800',
-    자립위원회: 'bg-green-100 text-green-800',
-    정회원전용: 'bg-purple-100 text-purple-800',
+interface NoticeNewsProps {
+    initialNotices: NoticePost[]
 }
 
-export default function NoticeNews() {
+const categoryMap: Record<string, string> = {
+    'NOTICE': '노회공지',
+    'MEMBER': '정회원전용',
+    'FREE': '자립위원회', // 임시 매핑
+}
+
+const reverseCategoryMap: Record<string, string> = {
+    '노회공지': 'NOTICE',
+    '정회원전용': 'MEMBER',
+    '자립위원회': 'FREE',
+}
+
+const categoryColors: Record<string, string> = {
+    '노회공지': 'bg-blue-100 text-blue-800',
+    '자립위원회': 'bg-green-100 text-green-800',
+    '정회원전용': 'bg-purple-100 text-purple-800',
+    '기타': 'bg-gray-100 text-gray-800',
+}
+
+export default function NoticeNews({ initialNotices = [] }: NoticeNewsProps) {
     const [activeCategory, setActiveCategory] = useState<string>('전체')
     const categories = ['전체', '노회공지', '자립위원회', '정회원전용']
 
-    const filteredNotices =
-        activeCategory === '전체'
-            ? dummyNotices
-            : dummyNotices.filter((notice) => notice.category === activeCategory)
+    // HTML 태그 제거 및 길이 제한 함수
+    const getSummary = (content: string, limit: number = 100) => {
+        const text = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+        return text.length > limit ? text.substring(0, limit) + '...' : text;
+    }
+
+    // 날짜 포맷팅
+    const formatDate = (date: Date | string) => {
+        return new Date(date).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
+    }
+
+    // 카테고리 매핑 및 필터링
+    const getDisplayCategory = (post: NoticePost) => {
+        if (post.boardType === 'NOTICE') return '노회공지';
+        if (post.boardType === 'MEMBER') return '정회원전용';
+        // 카테고리 필드가 있으면 그것을 우선 사용 가능
+        return categoryMap[post.boardType] || '기타';
+    }
+
+    const filteredNotices = initialNotices.filter((notice) => {
+        const displayCategory = getDisplayCategory(notice);
+        if (activeCategory === '전체') return true;
+        return displayCategory === activeCategory;
+    }).slice(0, 8); // 최대 8개 표시
 
     return (
         <div className="h-full">
-            <div className="mb-8">
+            <div className="mb-8 text-center md:text-left">
                 <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
                     노회 공지 & 소식
                 </h2>
@@ -70,14 +84,14 @@ export default function NoticeNews() {
             </div>
 
             {/* Category Filter */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-8 justify-center md:justify-start">
                 {categories.map((category) => (
                     <button
                         key={category}
                         onClick={() => setActiveCategory(category)}
                         className={`px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 ${activeCategory === category
-                                ? 'bg-primary-blue text-white shadow-md'
-                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                            ? 'bg-primary-blue text-white shadow-md transform scale-105'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                             }`}
                     >
                         {category}
@@ -85,37 +99,53 @@ export default function NoticeNews() {
                 ))}
             </div>
 
-            {/* Notices List */}
-            <div className="space-y-4 mb-6">
-                {filteredNotices.slice(0, 3).map((notice) => (
-                    <div
-                        key={notice.id}
-                        className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100"
-                    >
-                        <div className="flex flex-col mb-2">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${categoryColors[notice.category]
-                                        }`}
-                                >
-                                    {notice.category}
-                                </span>
-                                <span className="text-xs text-gray-500">{notice.date}</span>
-                            </div>
-                        </div>
-                        <h3 className="text-base font-semibold text-gray-900 mb-1 hover:text-primary-blue transition-colors cursor-pointer">
-                            {notice.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">{notice.summary}</p>
-                    </div>
-                ))}
-            </div>
+            {/* Notices Grid */}
+            {filteredNotices.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {filteredNotices.map((notice) => {
+                        const displayCategory = getDisplayCategory(notice);
+                        return (
+                            <Link
+                                key={notice.id}
+                                href={`/board/${notice.boardType}/${notice.id}`}
+                                className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100 flex flex-col h-full"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <span
+                                        className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[displayCategory] || categoryColors['기타']
+                                            }`}
+                                    >
+                                        {displayCategory}
+                                    </span>
+                                    <span className="text-xs text-gray-400">{formatDate(notice.createdAt)}</span>
+                                </div>
+
+                                <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary-blue transition-colors">
+                                    {notice.title}
+                                </h3>
+
+                                <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
+                                    {getSummary(notice.content)}
+                                </p>
+
+                                <div className="flex items-center text-xs text-gray-500 mt-auto pt-4 border-t border-gray-50">
+                                    <span>{notice.authorName || notice.author.name}</span>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300 mb-8">
+                    <p className="text-gray-500">등록된 게시글이 없습니다.</p>
+                </div>
+            )}
 
             {/* View All Button */}
             <div className="text-center">
-                <a
-                    href="/notices/announcements"
-                    className="inline-flex items-center px-6 py-2 bg-white text-primary-blue border-2 border-primary-blue rounded-lg font-semibold hover:bg-primary-blue hover:text-white transition-all duration-300 text-sm"
+                <Link
+                    href="/board/NOTICE"
+                    className="inline-flex items-center px-6 py-3 bg-white text-primary-blue border-2 border-primary-blue rounded-lg font-semibold hover:bg-primary-blue hover:text-white transition-all duration-300 text-sm shadow-sm hover:shadow-md"
                 >
                     전체 공지 보기
                     <svg
@@ -129,7 +159,7 @@ export default function NoticeNews() {
                     >
                         <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                </a>
+                </Link>
             </div>
         </div>
     )

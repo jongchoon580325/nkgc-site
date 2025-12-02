@@ -3,6 +3,7 @@ import AdminOnly from '../../components/auth/AdminOnly'
 import fs from 'fs/promises'
 import path from 'path'
 import InspectionsClient from './InspectionsClient'
+import PageHeader from '@/app/components/common/PageHeader'
 
 export interface PersonInfo {
     name: string
@@ -43,15 +44,7 @@ export default async function InspectionsPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">시찰소개</h1>
-                    <p className="text-xl opacity-90">
-                        대한예수교 장로회 남경기노회 시찰별 현황
-                    </p>
-                </div>
-            </section>
+            <PageHeader title="시찰소개" subtitle="대한예수교 장로회 남경기노회 시찰별 현황" />
 
             {/* Introduction Section */}
             <section className="section-padding">

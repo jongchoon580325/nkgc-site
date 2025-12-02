@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import AdminOnly from '../../components/auth/AdminOnly'
 import fs from 'fs/promises'
 import path from 'path'
+import PageHeader from '@/app/components/common/PageHeader'
 
 interface YearOfficers {
     year: string
@@ -45,13 +46,7 @@ export default async function PastOfficersPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">역대임원</h1>
-                    <p className="text-xl opacity-90">대한예수교 장로회 남경기노회</p>
-                </div>
-            </section>
+            <PageHeader title="역대임원" />
 
             {/* Table Section */}
             <section className="section-padding">

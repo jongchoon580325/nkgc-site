@@ -50,10 +50,10 @@ export default function Header() {
         },
         {
             label: '노회행정',
-            href: '/administration/forms',
+            href: '/board/form_admin',
             submenu: [
-                { label: '노회행정서식', href: '/administration/forms' },
-                { label: '자립위원회서식', href: '/administration/independence-forms' },
+                { label: '노회행정서식', href: '/board/form_admin' },
+                { label: '자립위원회서식', href: '/board/form_self' },
                 { label: '노회원현황', href: '/administration/members-status' },
                 { label: '상비부현황', href: '/administration/standing-committees' },
                 { label: '상회비현황', href: '/administration/fees-status' },
@@ -62,23 +62,22 @@ export default function Header() {
         },
         {
             label: '노회자료',
-            href: '/resources/photos',
+            href: '/board/gallery',
             submenu: [
-                { label: '사진자료실', href: '/resources/photos' },
-                { label: '영상자료실', href: '/resources/videos' },
+                { label: '사진자료실', href: '/board/gallery' },
+                { label: '영상자료실', href: '/board/video' },
                 { label: '규칙자료실', href: '/resources/rules' },
-                { label: '고시자료실', href: '/resources/notices' },
+                { label: '고시자료실', href: '/board/exam' },
                 { label: '결의서자료실', href: '/resources/resolutions' },
-                { label: '고시자학습자료실', href: '/resources/study-materials' },
             ],
         },
         {
             label: '노회알림',
-            href: '/notices',
+            href: '/board/notice',
             submenu: [
-                { label: '노회공지', href: '/notices/announcements' },
-                { label: '자립위원회', href: '/notices/independence' },
-                { label: '정회원전용', href: '/notices/members-only' },
+                { label: '노회공지판', href: '/board/notice' },
+                { label: '회원게시판', href: '/board/member' },
+                { label: '자유게시판', href: '/board/free' },
             ],
         },
     ]

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import AdminOnly from '../../components/auth/AdminOnly'
 import fs from 'fs/promises'
 import path from 'path'
+import PageHeader from '@/app/components/common/PageHeader'
 
 interface Section {
     heading: string
@@ -32,13 +33,7 @@ export default async function IntroductionPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">{data.title}</h1>
-                    <p className="text-xl opacity-90">{data.subtitle}</p>
-                </div>
-            </section>
+            <PageHeader title={data.title} subtitle={data.subtitle} />
 
             {/* Content Section */}
             <section className="section-padding">

@@ -13,7 +13,7 @@ const quickActions: QuickActionCard[] = [
         icon: '📢',
         title: '노회공지',
         description: '최신 공지사항 확인',
-        href: '/notices/announcements',
+        href: '/board/NOTICE',
         hoverColor: 'hover:bg-pink-50',
     },
     {
@@ -27,21 +27,21 @@ const quickActions: QuickActionCard[] = [
         icon: '👥',
         title: '상비부현황',
         description: '상설 위원회 정보',
-        href: '/admin/committees',
+        href: '/administration/standing-committees',
         hoverColor: 'hover:bg-purple-50',
     },
     {
         icon: '📚',
         title: '고시부자료',
         description: '고시 관련 자료',
-        href: '/resources/examination',
+        href: '/board/EXAM_DEPT',
         hoverColor: 'hover:bg-green-50',
     },
     {
         icon: '💬',
         title: '정회원게시판',
         description: '회원 전용 게시판',
-        href: '/notices/members-only',
+        href: '/board/MEMBER',
         hoverColor: 'hover:bg-yellow-50',
     },
     {
@@ -55,7 +55,7 @@ const quickActions: QuickActionCard[] = [
         icon: '📄',
         title: '노회서식',
         description: '각종 행정 서식 다운로드',
-        href: '/admin/forms',
+        href: '/board/FORM_ADMIN',
         hoverColor: 'hover:bg-teal-50',
     },
     {

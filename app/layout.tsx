@@ -32,6 +32,9 @@ export const metadata: Metadata = {
         type: 'website',
         locale: 'ko_KR',
     },
+    icons: {
+        icon: '/images/logo.ico',
+    },
 }
 
 import { AuthProvider } from './components/auth/AuthProvider'

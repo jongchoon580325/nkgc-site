@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import PageHeader from '@/app/components/common/PageHeader'
 
 interface Resolution {
     id: number
@@ -49,13 +50,7 @@ export default function ResolutionsPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">결의서자료실</h1>
-                    <p className="text-xl opacity-90">대한예수교 장로회 남경기노회</p>
-                </div>
-            </section>
+            <PageHeader title="결의서자료실" />
 
             {/* Content Section */}
             <section className="section-padding">

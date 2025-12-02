@@ -42,10 +42,55 @@ export default function StandingCommitteesAdminPage() {
     const [currentTerm, setCurrentTerm] = useState('')
     const [isSavingTerm, setIsSavingTerm] = useState(false)
 
+    // Officers state
+    const [officers, setOfficers] = useState({
+        head: { name: '', title: '목사' },
+        secretary: { name: '', title: '목사' }
+    })
+    const [isSavingOfficers, setIsSavingOfficers] = useState(false)
+
     useEffect(() => {
         fetchCommittees()
         fetchTermSetting()
+        fetchOfficers()
     }, [])
+
+    const fetchOfficers = async () => {
+        try {
+            const response = await fetch('/api/admin/settings?key=standing_committee_officers')
+            const result = await response.json()
+            if (result.success && result.data && result.data.value) {
+                const data = JSON.parse(result.data.value)
+                setOfficers(data)
+            }
+        } catch (err) {
+            console.error('임원 정보 로드 실패:', err)
+        }
+    }
+
+    const handleSaveOfficers = async () => {
+        try {
+            setIsSavingOfficers(true)
+            const response = await fetch('/api/admin/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    key: 'standing_committee_officers',
+                    value: JSON.stringify(officers)
+                })
+            })
+            const result = await response.json()
+            if (result.success) {
+                showMessage('success', '임원 정보가 저장되었습니다.')
+            } else {
+                showMessage('error', result.error || '저장에 실패했습니다.')
+            }
+        } catch (err) {
+            showMessage('error', '저장 중 오류가 발생했습니다.')
+        } finally {
+            setIsSavingOfficers(false)
+        }
+    }
 
     const fetchTermSetting = async () => {
         try {
@@ -252,6 +297,80 @@ export default function StandingCommitteesAdminPage() {
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
                     * 이 설정은 공개 페이지 상단에 표시되는 회기 정보에 적용됩니다.
+                </p>
+            </div>
+
+            {/* Officers Setting Section */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">임원 관리</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    {/* Nomination Head */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">공천부장</h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                                <input
+                                    type="text"
+                                    value={officers.head.name}
+                                    onChange={(e) => setOfficers({ ...officers, head: { ...officers.head, name: e.target.value } })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                    placeholder="예: 정영교"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">직책</label>
+                                <select
+                                    value={officers.head.title}
+                                    onChange={(e) => setOfficers({ ...officers, head: { ...officers.head, title: e.target.value } })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                >
+                                    <option value="목사">목사</option>
+                                    <option value="장로">장로</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Nomination Secretary */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">공천부 서기</h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                                <input
+                                    type="text"
+                                    value={officers.secretary.name}
+                                    onChange={(e) => setOfficers({ ...officers, secretary: { ...officers.secretary, name: e.target.value } })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                    placeholder="예: 문보길"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">직책</label>
+                                <select
+                                    value={officers.secretary.title}
+                                    onChange={(e) => setOfficers({ ...officers, secretary: { ...officers.secretary, title: e.target.value } })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                >
+                                    <option value="목사">목사</option>
+                                    <option value="장로">장로</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleSaveOfficers}
+                        disabled={isSavingOfficers}
+                        className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium disabled:opacity-50"
+                    >
+                        {isSavingOfficers ? '저장 중...' : '임원 정보 저장'}
+                    </button>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                    * 이 정보는 공개 페이지 상단 카드에 표시됩니다.
                 </p>
             </div>
 

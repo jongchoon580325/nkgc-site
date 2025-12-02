@@ -36,6 +36,11 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
   lastLoginAt   DateTime? @map("last_login_at")
 
+  // 게시판 관계
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+
   @@map("users")
 }
 
@@ -118,4 +123,122 @@ model FeeStatus {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("fee_statuses")
+}
+
+// --- 게시판 통합 관련 스키마 ---
+
+// --- 게시판 통합 관련 스키마 ---
+
+// SQLite는 Enum을 지원하지 않으므로 String으로 처리하고 애플리케이션 레벨에서 관리
+// BoardType: NOTICE, FREE, MEMBER, FORM_ADMIN, FORM_SELF, EXAM_DEPT, EXAM_USER, GALLERY
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  boardType   String    @map("board_type") // Enum 대신 String 사용
+  title       String
+  content     String    // SQLite에서는 String이 TEXT로 처리됨
+  
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    Int       @map("author_id")
+  authorName  String?   @map("author_name") // 표시용 작성자 이름
+  
+  viewCount   Int       @default(0) @map("view_count")
+  isNotice    Boolean   @default(false) @map("is_notice")
+  category    String?   @map("category")
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  comments    Comment[]
+  likes       Like[]
+  attachments Attachment[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int      @map("post_id")
+  
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int      @map("author_id")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("comments")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int      @map("post_id")
+  
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @map("user_id")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int      @map("post_id")
+  
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  fileSize  Int      @map("file_size")
+  mimeType  String?  @map("mime_type")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("attachments")
+}
+
+// --- 게시판 설정 모델 ---
+
+model BoardSettings {
+  id          Int      @id @default(autoincrement())
+  boardType   String   @unique @map("board_type") // FORM_ADMIN, GALLERY, etc.
+  categories  String   @default("[]") // JSON array of category names
+  settings    String?  // JSON for additional settings
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("board_settings")
+}
+
+// --- 히어로 섹션 프리셋 관리 ---
+
+model HeroConfig {
+  id                    Int      @id @default(autoincrement())
+  name                  String   // 프리셋 이름 (예: "크리스마스 특집")
+  isActive              Boolean  @default(false) @map("is_active") // 현재 활성화 여부
+  
+  // 배경 설정
+  backgroundImage       String?  @map("background_image") // PC용 배경 이미지 URL
+  backgroundImageMobile String?  @map("background_image_mobile") // 모바일용 배경 이미지
+  animationType         String   @default("space") @map("animation_type") // space, zoom, fade, static
+  
+  // 텍스트 콘텐츠 (옵션)
+  titleText             String?  @map("title_text") // H1 (기본: "Coram Deo")
+  subtitleText          String?  @map("subtitle_text") // H3 (기본: "대한예수교...")
+  motto1                String?  // 모토 1
+  motto2                String?  // 모토 2
+  motto3                String?  // 모토 3
+  descriptionText       String?  @map("description_text") // Normal 텍스트
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  
+  @@index([isActive])
+  @@map("hero_configs")
 }

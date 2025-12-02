@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { promises as fs } from 'fs'
 import path from 'path'
 import AdminOnly from '../../components/auth/AdminOnly'
+import PageHeader from '@/app/components/common/PageHeader'
 
 interface PresidentData {
     name: string
@@ -28,13 +29,7 @@ export default async function GreetingPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-brand-600 to-accent-600 text-white py-16">
-                <div className="container-custom">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">노회장인사</h1>
-                    <p className="text-xl opacity-90">대한예수교 장로회 남경기노회</p>
-                </div>
-            </section>
+            <PageHeader title="노회장인사" />
 
             {/* Main Content */}
             <section className="section-padding">
