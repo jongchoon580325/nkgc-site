@@ -35,23 +35,33 @@ export default function Gallery() {
 
     const fetchGalleryData = async () => {
         try {
+            setLoading(true);
+
             // Fetch settings
             const settingsRes = await fetch('/api/board-settings/GALLERY');
             const settingsData = await settingsRes.json();
 
-            if (settingsRes.ok && settingsData.settings) {
-                const parsed = JSON.parse(settingsData.settings);
-                setSettings({
-                    homeEnabled: parsed.homeEnabled !== undefined ? parsed.homeEnabled : true,
-                    homeCount: parsed.homeCount || 6,
-                });
+            let fetchedSettings = { homeEnabled: true, homeCount: 6 };
 
-                // Only fetch posts if homeEnabled
-                if (parsed.homeEnabled !== false) {
-                    const postsRes = await fetch(`/api/posts?type=GALLERY&page=1&limit=${parsed.homeCount || 6}`);
-                    const postsData = await postsRes.json();
-                    setImages(postsData.posts || []);
+            if (settingsRes.ok && settingsData.settings) {
+                try {
+                    const parsed = JSON.parse(settingsData.settings);
+                    fetchedSettings = {
+                        homeEnabled: parsed.homeEnabled !== undefined ? parsed.homeEnabled : true,
+                        homeCount: parsed.homeCount || 6,
+                    };
+                } catch (e) {
+                    console.error('Error parsing settings:', e);
                 }
+            }
+
+            setSettings(fetchedSettings);
+
+            // Always try to fetch posts if homeEnabled (default true)
+            if (fetchedSettings.homeEnabled !== false) {
+                const postsRes = await fetch(`/api/posts?type=GALLERY&page=1&limit=${fetchedSettings.homeCount}`);
+                const postsData = await postsRes.json();
+                setImages(postsData.posts || []);
             }
         } catch (error) {
             console.error('Error fetching gallery:', error);
@@ -110,7 +120,7 @@ export default function Gallery() {
                             return (
                                 <Link
                                     key={image.id}
-                                    href={`/board/GALLERY?open=${image.id}`}
+                                    href={`/board/gallery?open=${image.id}`}
                                     className="group relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300"
                                 >
                                     {/* 실제 이미지 */}
@@ -131,7 +141,7 @@ export default function Gallery() {
                     <div className="text-center mt-10">
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <a
-                                href="/resources/photos"
+                                href="/board/gallery"
                                 className="inline-flex items-center px-8 py-3 bg-white text-primary-blue border-2 border-primary-blue rounded-lg font-semibold hover:bg-primary-blue hover:text-white transition-all duration-300"
                             >
                                 전체 사진 보기
@@ -148,7 +158,7 @@ export default function Gallery() {
                                 </svg>
                             </a>
                             <a
-                                href="/resources/videos"
+                                href="/board/video"
                                 className="inline-flex items-center px-8 py-3 bg-accent-500 text-white rounded-lg font-semibold hover:bg-accent-600 transition-all duration-300"
                             >
                                 영상 자료실
