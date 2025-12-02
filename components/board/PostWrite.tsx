@@ -7,9 +7,7 @@ import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 import FileUploader from './FileUploader';
-
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
-import 'react-quill-new/dist/quill.snow.css';
+import QuillEditor from './QuillEditor';
 
 interface PostWriteProps {
     boardType: BoardType;
@@ -262,32 +260,10 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                             <label htmlFor="content" className="block text-sm font-medium mb-2">
                                 내용 <span className="text-red-500">*</span>
                             </label>
-                            <ReactQuill
+                            <QuillEditor
                                 value={content}
                                 onChange={setContent}
-                                className="bg-white"
-                                theme="snow"
                                 placeholder="내용을 입력하세요"
-                                modules={{
-                                    toolbar: [
-                                        [{ 'header': [1, 2, 3, false] }],
-                                        ['bold', 'italic', 'underline', 'strike'],
-                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                        [{ 'color': [] }, { 'background': [] }],
-                                        ['link', 'image', 'video'],
-                                        ['clean']
-                                    ],
-                                    clipboard: {
-                                        matchVisual: false,
-                                    }
-                                }}
-                                formats={[
-                                    'header',
-                                    'bold', 'italic', 'underline', 'strike',
-                                    'list',
-                                    'color', 'background',
-                                    'link', 'image', 'video'
-                                ]}
                             />
                         </div>
 

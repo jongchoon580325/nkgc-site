@@ -7,10 +7,7 @@ import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 import FileUploader from './FileUploader';
-
-// ReactQuill dynamic import for SSR prevention
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
-import 'react-quill-new/dist/quill.snow.css';
+import QuillEditor from './QuillEditor';
 
 interface PostEditProps {
     boardType: BoardType;
@@ -246,31 +243,10 @@ export default function PostEdit({ boardType, postId }: PostEditProps) {
                         <div>
                             <label className="block text-sm font-medium mb-2">내용</label>
                             <div className="h-96 mb-12">
-                                <ReactQuill
-                                    theme="snow"
+                                <QuillEditor
                                     value={content}
                                     onChange={setContent}
                                     className="h-full"
-                                    modules={{
-                                        toolbar: [
-                                            [{ header: [1, 2, 3, false] }],
-                                            ['bold', 'italic', 'underline', 'strike'],
-                                            [{ list: 'ordered' }, { list: 'bullet' }],
-                                            [{ 'color': [] }, { 'background': [] }],
-                                            ['link', 'image', 'video'],
-                                            ['clean'],
-                                        ],
-                                        clipboard: {
-                                            matchVisual: false,
-                                        }
-                                    }}
-                                    formats={[
-                                        'header',
-                                        'bold', 'italic', 'underline', 'strike',
-                                        'list',
-                                        'color', 'background',
-                                        'link', 'image', 'video'
-                                    ]}
                                 />
                             </div>
                         </div>
