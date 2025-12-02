@@ -233,8 +233,8 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
 
             {/* Action Buttons Group */}
             <div className="mt-6 flex justify-end gap-3">
-                {/* Back to Main Exam Page Button (only for EXAM_DEPT and EXAM_USER) */}
-                {(boardType === 'EXAM_DEPT' || boardType === 'EXAM_USER') && (
+                {/* Back to Main Exam Page Button (only for EXAM_DEPT and EXAM_USER when showHeader is true) */}
+                {showHeader && (boardType === 'EXAM_DEPT' || boardType === 'EXAM_USER') && (
                     <Link
                         href="/board/exam"
                         className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
@@ -247,7 +247,7 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
                 )}
 
                 {/* Write Button */}
-                {config.canWrite && (
+                {config.writePermission !== 'admin' && (
                     <Link
                         href={`/board/${boardType}/write`}
                         className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
