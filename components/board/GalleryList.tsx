@@ -148,7 +148,7 @@ export default function GalleryList({ boardType }: GalleryListProps) {
     };
 
     // 이미지 URL 추출
-    const extractThumbnail = (post: Post): { url: string | null, isVideo: boolean, youtubeId?: string } => {
+    const extractThumbnail = (post: Post): { url: string | null, isVideo: boolean, youtubeId?: string, isMp4?: boolean } => {
         // 1. Content에서 이미지 찾기
         const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
         if (imgMatch) return { url: imgMatch[1], isVideo: false };
@@ -164,8 +164,19 @@ export default function GalleryList({ boardType }: GalleryListProps) {
             }
         }
 
-        // 3. VIDEO 게시판인 경우 유튜브 썸네일 찾기
+        // 3. VIDEO 게시판인 경우
         if (boardType === 'VIDEO') {
+            // 3-1. MP4 비디오 찾기 (video 태그)
+            const videoMatch = post.content.match(/<video[^>]+src="([^">]+)"/);
+            if (videoMatch) {
+                return {
+                    url: videoMatch[1],
+                    isVideo: true,
+                    isMp4: true
+                };
+            }
+
+            // 3-2. 유튜브 썸네일 찾기
             // iframe src에서 찾기
             const iframeMatch = post.content.match(/src="([^"]+)"/);
             if (iframeMatch) {
@@ -231,7 +242,7 @@ export default function GalleryList({ boardType }: GalleryListProps) {
                             }}
                         >
                             {posts.map((post, index) => {
-                                const { url: imageUrl, isVideo } = extractThumbnail(post);
+                                const { url: imageUrl, isVideo, isMp4 } = extractThumbnail(post);
                                 return (
                                     <div
                                         key={post.id}
@@ -244,13 +255,28 @@ export default function GalleryList({ boardType }: GalleryListProps) {
                                         >
                                             {imageUrl ? (
                                                 <>
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={post.title}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                                    />
+                                                    {isMp4 ? (
+                                                        <video
+                                                            src={imageUrl}
+                                                            className="w-full h-full object-cover"
+                                                            muted
+                                                            playsInline
+                                                            onMouseOver={e => e.currentTarget.play()}
+                                                            onMouseOut={e => {
+                                                                e.currentTarget.pause();
+                                                                e.currentTarget.currentTime = 0;
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={post.title}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                        />
+                                                    )}
+
                                                     {isVideo && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all">
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all pointer-events-none">
                                                             <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
                                                                 <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                                                                     <path d="M8 5v14l11-7z" />
@@ -371,23 +397,36 @@ export default function GalleryList({ boardType }: GalleryListProps) {
                     >
                         <div className="relative w-full h-[80vh] flex items-center justify-center">
                             {(() => {
-                                const { url, isVideo, youtubeId } = extractThumbnail(posts[selectedPostIndex]);
+                                const { url, isVideo, youtubeId, isMp4 } = extractThumbnail(posts[selectedPostIndex]);
 
-                                if (isVideo && youtubeId) {
-                                    return (
-                                        <div className="w-full h-full max-w-5xl aspect-video flex items-center justify-center bg-black">
-                                            <iframe
-                                                width="100%"
-                                                height="100%"
-                                                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
-                                                title="YouTube video player"
-                                                frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                                className="w-full h-full"
-                                            ></iframe>
-                                        </div>
-                                    );
+                                if (isVideo) {
+                                    if (youtubeId) {
+                                        return (
+                                            <div className="w-full h-full max-w-5xl aspect-video flex items-center justify-center bg-black">
+                                                <iframe
+                                                    width="100%"
+                                                    height="100%"
+                                                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+                                                    title="YouTube video player"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="w-full h-full"
+                                                ></iframe>
+                                            </div>
+                                        );
+                                    } else if (isMp4 && url) {
+                                        return (
+                                            <div className="w-full h-full max-w-5xl aspect-video flex items-center justify-center bg-black">
+                                                <video
+                                                    src={url}
+                                                    controls
+                                                    autoPlay
+                                                    className="w-full h-full"
+                                                />
+                                            </div>
+                                        );
+                                    }
                                 }
 
                                 return url ? (
