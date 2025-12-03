@@ -222,6 +222,21 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
 
                 <Divider />
 
+                {/* Text Color */}
+                <div className="flex items-center gap-1">
+                    <div className="relative flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 cursor-pointer overflow-hidden" title="글자 색상">
+                        <span className="text-lg font-bold" style={{ color: editor.getAttributes('textStyle').color || '#000000' }}>A</span>
+                        <input
+                            type="color"
+                            onInput={(e) => editor.chain().focus().setColor(e.currentTarget.value).run()}
+                            value={editor.getAttributes('textStyle').color || '#000000'}
+                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                        />
+                    </div>
+                </div>
+
+                <Divider />
+
                 {/* Insert */}
                 <div className="flex gap-0.5">
                     <Button onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="인용구">
