@@ -145,6 +145,7 @@ export default function TinyMCEEditor({ value, onChange, placeholder, readOnly, 
 
             {viewMode === 'rich' && (
                 <Editor
+                    tinymceScriptSrc="/tinymce/tinymce.min.js"
                     onInit={(evt, editor) => editorRef.current = editor}
                     value={localValue}
                     onEditorChange={handleEditorChange}
