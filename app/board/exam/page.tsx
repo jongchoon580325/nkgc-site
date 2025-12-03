@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BOARD_TYPES } from '@/lib/board-config';
 import PostList from '@/components/board/PostList';
+import ExamMaterialList from '@/components/board/ExamMaterialList';
 import PageHeader from '@/app/components/common/PageHeader';
 
 export default function ExamMaterialsPage() {
@@ -40,7 +41,7 @@ export default function ExamMaterialsPage() {
                     {/* 탭 컨텐츠 */}
                     <div>
                         {activeTab === 'EXAM_DEPT' && <PostList boardType={BOARD_TYPES.EXAM_DEPT} showHeader={false} />}
-                        {activeTab === 'EXAM_USER' && <PostList boardType={BOARD_TYPES.EXAM_USER} showHeader={false} />}
+                        {activeTab === 'EXAM_USER' && <ExamMaterialList boardType={BOARD_TYPES.EXAM_USER} />}
                     </div>
                 </div>
             </div>

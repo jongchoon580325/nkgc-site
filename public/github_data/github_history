@@ -1,3 +1,103 @@
+33. [2025-12-03 17:15] Commit: 40918ce
+   Title: fix: Support MP4 video thumbnails in GalleryList
+   Description: fix: Support MP4 video thumbnails in GalleryList
+
+32. [2025-12-03 16:55] Commit: fbbb078
+   Title: feat: Implement MP4 video upload and rendering in Tiptap editor
+   Description: feat: Implement MP4 video upload and rendering in Tiptap editor
+
+31. [2025-12-03 11:45] Commit: 7613483
+   Title: feat: Add font color picker to Tiptap editor toolbar
+   Description: feat: Add font color picker to Tiptap editor toolbar
+
+30. [2025-12-03 11:38] Commit: 4d4f177
+   Title: feat: Enhance Tiptap editor features and toolbar
+   Description: feat: Enhance Tiptap editor features and toolbar
+
+29. [2025-12-03 11:23] Commit: b0aea1b
+   Title: fix: Disable immediate render in Tiptap to prevent SSR mismatch
+   Description: fix: Disable immediate render in Tiptap to prevent SSR mismatch
+
+28. [2025-12-03 11:15] Commit: 6218d4d
+   Title: fix: Correct Tiptap extension imports
+   Description: fix: Correct Tiptap extension imports
+
+27. [2025-12-03 11:10] Commit: c85afb0
+   Title: chore: Remove unused TinyMCE files
+   Description: chore: Remove unused TinyMCE files
+
+26. [2025-12-03 11:08] Commit: 25643e0
+   Title: feat: Replace TinyMCE with Tiptap editor
+   Description: BREAKING CHANGE: Replaced TinyMCE with Tiptap for better table support
+
+25. [2025-12-03 11:04] Commit: 0355a83
+   Title: fix: Use direct CSS for table styling instead of Tailwind prose
+   Description: fix: Use direct CSS for table styling instead of Tailwind prose
+
+24. [2025-12-03 10:52] Commit: 0aa7740
+   Title: fix: Add table borders styling to post content
+   Description: fix: Add table borders styling to post content
+
+23. [2025-12-03 10:45] Commit: dc5a27b
+   Title: fix: Add GPL license key to TinyMCE config
+   Description: fix: Add GPL license key to TinyMCE config
+
+22. [2025-12-03 10:42] Commit: 26b973f
+   Title: fix: Configure TinyMCE for self-hosted mode
+   Description: fix: Configure TinyMCE for self-hosted mode
+
+21. [2025-12-03 10:37] Commit: 67f5acf
+   Title: feat: Replace Quill with TinyMCE editor
+   Description: BREAKING CHANGE: Replaced Quill editor with TinyMCE for better HTML/table support
+
+20. [2025-12-03 10:23] Commit: 45775d2
+   Title: feat: Add quill-better-table module for table support
+   Description: feat: Add quill-better-table module for table support
+
+19. [2025-12-03 10:14] Commit: f6cd434
+   Title: fix: Add table format to Quill editor formats array
+   Description: fix: Add table format to Quill editor formats array
+
+18. [2025-12-03 10:10] Commit: 18a1b9f
+   Title: fix: Enable table HTML support in Quill editor
+   Description: fix: Enable table HTML support in Quill editor
+
+17. [2025-12-03 09:27] Commit: 1ab9f2a
+   Title: fix: Remove fixed height from editor in edit mode
+   Description: fix: Remove fixed height from editor in edit mode
+
+16. [2025-12-02 19:07] Commit: bb55a73
+   Title: fix: Hide back button on /board/exam main page
+   Description: fix: Hide back button on /board/exam main page
+
+15. [2025-12-02 19:01] Commit: 06e0619
+   Title: feat: Add back to main exam page button for EXAM boards
+   Description: feat: Add back to main exam page button for EXAM boards
+
+14. [2025-12-02 18:08] Commit: 44292be
+   Title: feat: Add CSV export/import to fees status admin
+   Description: feat: Add CSV export/import to fees status admin
+
+13. [2025-12-02 17:48] Commit: 8d1828c
+   Title: fix: Align members column to left and match font size
+   Description: fix: Align members column to left and match font size
+
+12. [2025-12-02 17:40] Commit: 709c7a4
+   Title: feat: Change CSV import to overwrite mode
+   Description: feat: Change CSV import to overwrite mode
+
+11. [2025-12-02 17:37] Commit: 4c53474
+   Title: fix: Properly parse comma-separated members in CSV import
+   Description: fix: Properly parse comma-separated members in CSV import
+
+10. [2025-12-02 17:16] Commit: fcce67e
+   Title: feat: Add CSV export/import to standing committees admin
+   Description: feat: Add CSV export/import to standing committees admin
+
+9. [2025-12-02 16:32] Commit: 7388bfb
+   Title: fix: Correct redirect after post create/edit in admin pages
+   Description: fix: Correct redirect after post create/edit in admin pages
+
 8. [2025-12-02 16:19] Commit: 5c579eb
    Title: feat: Add YouTube button to editor toolbar
    Description: feat: Add YouTube button to editor toolbar
