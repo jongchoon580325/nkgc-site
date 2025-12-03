@@ -59,6 +59,7 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
             onChange(html);
             setLocalValue(html);
         },
+        immediatelyRender: false,
     });
 
     // Sync editor content when value prop changes
