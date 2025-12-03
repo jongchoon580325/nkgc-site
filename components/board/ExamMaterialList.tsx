@@ -38,8 +38,10 @@ export default function ExamMaterialList({ boardType }: ExamMaterialListProps) {
             const res = await fetch(`/api/board-settings/${boardType}`);
             const data = await res.json();
             if (data.settings) {
-                const parsed = JSON.parse(data.settings);
-                setGridColumns(parsed.gridColumns || 4);
+                const settings = typeof data.settings === 'string'
+                    ? JSON.parse(data.settings)
+                    : data.settings;
+                setGridColumns(settings.gridColumns || 4);
             }
         } catch (error) {
             console.error('Error fetching settings:', error);

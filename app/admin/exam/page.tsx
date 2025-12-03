@@ -60,8 +60,12 @@ export default function AdminExamPage() {
             const res = await fetch('/api/board-settings/EXAM_USER');
             const data = await res.json();
             if (data.settings) {
-                const parsed = JSON.parse(data.settings);
-                setGridColumns(parsed.gridColumns || 4);
+                // API returns parsed object, so use it directly
+                // If it happens to be a string (legacy), parse it
+                const settings = typeof data.settings === 'string'
+                    ? JSON.parse(data.settings)
+                    : data.settings;
+                setGridColumns(settings.gridColumns || 4);
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
@@ -71,14 +75,16 @@ export default function AdminExamPage() {
     const handleSaveSettings = async () => {
         try {
             const res = await fetch('/api/board-settings/EXAM_USER', {
-                method: 'POST',
+                method: 'PUT', // Changed from POST to PUT
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    settings: JSON.stringify({ gridColumns }),
+                    settings: { gridColumns }, // Send as object, API will stringify it
                 }),
             });
             if (res.ok) {
                 alert('설정이 저장되었습니다.');
+            } else {
+                throw new Error('Failed to save');
             }
         } catch (error) {
             console.error('Error saving settings:', error);
