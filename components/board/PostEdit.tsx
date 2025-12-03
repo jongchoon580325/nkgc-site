@@ -252,13 +252,10 @@ export default function PostEdit({ boardType, postId }: PostEditProps) {
                         {/* Content */}
                         <div>
                             <label className="block text-sm font-medium mb-2">내용</label>
-                            <div className="h-96 mb-12">
-                                <QuillEditor
-                                    value={content}
-                                    onChange={setContent}
-                                    className="h-full"
-                                />
-                            </div>
+                            <QuillEditor
+                                value={content}
+                                onChange={setContent}
+                            />
                         </div>
 
                         {/* Existing Files */}
