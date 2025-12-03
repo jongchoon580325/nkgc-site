@@ -147,7 +147,7 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
                         {/* 본문 */}
                         <div className="px-6 py-6">
                             <div
-                                className="prose max-w-none"
+                                className="prose max-w-none prose-table:border-collapse prose-table:border prose-table:border-gray-300 prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-td:border prose-td:border-gray-300 prose-td:p-2"
                                 dangerouslySetInnerHTML={{ __html: post.content }}
                             />
                         </div>
