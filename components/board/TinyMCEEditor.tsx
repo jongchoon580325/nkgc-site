@@ -150,6 +150,7 @@ export default function TinyMCEEditor({ value, onChange, placeholder, readOnly, 
                     value={localValue}
                     onEditorChange={handleEditorChange}
                     init={{
+                        license_key: 'gpl',
                         height: 500,
                         menubar: false,
                         plugins: [
