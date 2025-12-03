@@ -11,10 +11,15 @@ const ReactQuill = dynamic(async () => {
     const { default: RQ } = await import('react-quill-new');
     const { default: Quill } = await import('quill');
 
+    // Register Table Module
+    try {
+        const QuillBetterTable = (await import('quill-better-table')).default;
+        Quill.register('modules/better-table', QuillBetterTable);
+    } catch (e) {
+        console.warn('Failed to load better-table module', e);
+    }
+
     // Register Markdown Shortcuts
-    // Note: We need to dynamically import this as well if it depends on window/document
-    // or just require it. Some packages might need 'quill' to be available globally or passed.
-    // For now, let's try standard import if it works, otherwise we might need a workaround.
     try {
         const MarkdownShortcuts = (await import('quill-markdown-shortcuts')).default;
         Quill.register('modules/markdownShortcuts', MarkdownShortcuts);
@@ -22,7 +27,6 @@ const ReactQuill = dynamic(async () => {
         console.warn('Failed to load markdown shortcuts', e);
     }
 
-    // Add custom fonts size if needed, but header 1-6 is standard
     return RQ as any;
 }, { ssr: false });
 
@@ -59,14 +63,11 @@ export default function QuillEditor({ value, onChange, placeholder, readOnly, cl
                 ['clean'],
             ],
         },
+        'better-table': {},
         clipboard: {
-            matchVisual: false,
-            allowed: {
-                tags: ['br', 'b', 'i', 'strong', 'em', 'u', 's', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ol', 'ul', 'li', 'a', 'img', 'video', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'blockquote', 'span', 'div'],
-                attributes: ['href', 'src', 'alt', 'class', 'style', 'target', 'width', 'height', 'border', 'cellpadding', 'cellspacing', 'colspan', 'rowspan']
-            }
+            matchVisual: false
         },
-        markdownShortcuts: {} // Enable markdown shortcuts
+        markdownShortcuts: {}
     }), []);
 
     const handleRichChange = (content: string) => {
