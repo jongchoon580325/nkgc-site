@@ -147,9 +147,34 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
                         {/* 본문 */}
                         <div className="px-6 py-6">
                             <div
-                                className="prose max-w-none prose-table:border-collapse prose-table:border prose-table:border-gray-300 prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-td:border prose-td:border-gray-300 prose-td:p-2"
+                                className="post-content"
                                 dangerouslySetInnerHTML={{ __html: post.content }}
                             />
+                            <style jsx>{`
+                                .post-content table {
+                                    border-collapse: collapse;
+                                    width: 100%;
+                                    border: 1px solid #888;
+                                    margin: 1em 0;
+                                }
+                                .post-content th,
+                                .post-content td {
+                                    border: 1px solid #888;
+                                    padding: 8px 12px;
+                                    text-align: left;
+                                }
+                                .post-content th {
+                                    background-color: #f0f0f0;
+                                    font-weight: 600;
+                                }
+                                .post-content img {
+                                    max-width: 100%;
+                                    height: auto;
+                                }
+                                .post-content iframe {
+                                    max-width: 100%;
+                                }
+                            `}</style>
                         </div>
 
                         {/* 첨부파일 */}
