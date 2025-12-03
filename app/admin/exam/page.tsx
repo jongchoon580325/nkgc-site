@@ -300,7 +300,7 @@ export default function AdminExamPage() {
             {/* Edit/Create Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+                    <div className="bg-white rounded-lg p-6 w-11/12 md:w-1/3 min-w-[320px]">
                         <h2 className="text-xl font-bold mb-4">
                             {editingMaterial ? '자료 수정' : '자료 등록'}
                         </h2>

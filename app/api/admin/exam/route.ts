@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { BOARD_CONFIG } from '@/lib/board-config';
 
 const BOARD_TYPE = 'EXAM_USER';
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
                 title,
                 content: '', // 내용은 선택사항이므로 빈 문자열
                 boardType: BOARD_TYPE,
-                authorId: session.user.id,
+                authorId: parseInt(session.user.id), // Fix: Parse string ID to integer
                 authorName: session.user.name || '관리자',
                 attachments: {
                     create: attachments?.map((att: any) => ({
