@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 import FileUploader from './FileUploader';
-import QuillEditor from './QuillEditor';
+import TinyMCEEditor from './TinyMCEEditor';
 
 interface PostWriteProps {
     boardType: BoardType;
@@ -266,7 +266,7 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                             <label htmlFor="content" className="block text-sm font-medium mb-2">
                                 내용 <span className="text-red-500">*</span>
                             </label>
-                            <QuillEditor
+                            <TinyMCEEditor
                                 value={content}
                                 onChange={setContent}
                                 placeholder="내용을 입력하세요"

@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 import FileUploader from './FileUploader';
-import QuillEditor from './QuillEditor';
+import TinyMCEEditor from './TinyMCEEditor';
 
 // ReactQuill dynamic import for SSR prevention
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -252,7 +252,7 @@ export default function PostEdit({ boardType, postId }: PostEditProps) {
                         {/* Content */}
                         <div>
                             <label className="block text-sm font-medium mb-2">내용</label>
-                            <QuillEditor
+                            <TinyMCEEditor
                                 value={content}
                                 onChange={setContent}
                             />
