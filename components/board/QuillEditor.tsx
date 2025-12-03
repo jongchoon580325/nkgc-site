@@ -61,6 +61,10 @@ export default function QuillEditor({ value, onChange, placeholder, readOnly, cl
         },
         clipboard: {
             matchVisual: false,
+            allowed: {
+                tags: ['br', 'b', 'i', 'strong', 'em', 'u', 's', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ol', 'ul', 'li', 'a', 'img', 'video', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'blockquote', 'span', 'div'],
+                attributes: ['href', 'src', 'alt', 'class', 'style', 'target', 'width', 'height', 'border', 'cellpadding', 'cellspacing', 'colspan', 'rowspan']
+            }
         },
         markdownShortcuts: {} // Enable markdown shortcuts
     }), []);
