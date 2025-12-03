@@ -209,7 +209,8 @@ export default function QuillEditor({ value, onChange, placeholder, readOnly, cl
                             'bold', 'italic', 'underline', 'strike',
                             'list',
                             'color', 'background',
-                            'link', 'image', 'video'
+                            'link', 'image', 'video',
+                            'table', 'code-block', 'blockquote'
                         ]}
                         placeholder={placeholder}
                         readOnly={readOnly}
