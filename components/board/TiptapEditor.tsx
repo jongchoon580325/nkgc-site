@@ -11,6 +11,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { Video } from './extensions/Video';
 import { useState, useEffect } from 'react';
 import TurndownService from 'turndown';
 import { marked } from 'marked';
@@ -55,6 +56,7 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
             TextAlign.configure({
                 types: ['heading', 'paragraph'],
             }),
+            Video,
         ],
         content: value,
         editable: !readOnly,
@@ -89,6 +91,41 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
         if (!url || !editor) return;
 
         editor.commands.setImage({ src: url });
+    };
+
+    const handleVideoUpload = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'video/mp4';
+        input.onchange = async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload/video', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || '업로드 실패');
+                    return;
+                }
+
+                const data = await response.json();
+                if (editor) {
+                    editor.commands.setVideo({ src: data.fileUrl });
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('업로드 중 오류가 발생했습니다.');
+            }
+        };
+        input.click();
     };
 
     const toggleViewMode = (mode: ViewMode) => {
@@ -253,6 +290,9 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
                     </Button>
                     <Button onClick={handleYouTubeInsert} title="YouTube 영상">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="red"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" /></svg>
+                    </Button>
+                    <Button onClick={handleVideoUpload} title="동영상 업로드 (MP4)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" /></svg>
                     </Button>
                 </div>
             </div>
