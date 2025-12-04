@@ -1,7 +1,9 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { BoardType } from '@/lib/board-config';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for PDFFlipViewer to avoid SSR issues with canvas/window
+const PDFFlipViewer = dynamic(() => import('./PDFFlipViewer'), { ssr: false });
 
 interface Post {
     id: number;
@@ -23,7 +25,11 @@ export default function ExamMaterialList({ boardType }: ExamMaterialListProps) {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [gridColumns, setGridColumns] = useState(4);
+    const [viewMode, setViewMode] = useState<'new_tab' | 'flip_book'>('new_tab');
     const [search, setSearch] = useState('');
+
+    // Viewer State
+    const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSettings();
@@ -42,6 +48,7 @@ export default function ExamMaterialList({ boardType }: ExamMaterialListProps) {
                     ? JSON.parse(data.settings)
                     : data.settings;
                 setGridColumns(settings.gridColumns || 4);
+                setViewMode(settings.viewMode || 'new_tab');
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
@@ -73,8 +80,15 @@ export default function ExamMaterialList({ boardType }: ExamMaterialListProps) {
 
     const handleCardClick = (post: Post) => {
         if (post.attachments && post.attachments.length > 0) {
-            // 1차 구현: 새 탭에서 열기
-            window.open(post.attachments[0].fileUrl, '_blank');
+            const fileUrl = post.attachments[0].fileUrl;
+
+            if (viewMode === 'flip_book' && fileUrl.toLowerCase().endsWith('.pdf')) {
+                // Open Flip Viewer for PDF
+                setSelectedFile(fileUrl);
+            } else {
+                // Default: Open in new tab (also for non-PDFs)
+                window.open(fileUrl, '_blank');
+            }
         } else {
             alert('첨부된 파일이 없습니다.');
         }
@@ -159,6 +173,14 @@ export default function ExamMaterialList({ boardType }: ExamMaterialListProps) {
                         다음
                     </button>
                 </div>
+            )}
+
+            {/* PDF Flip Viewer Modal */}
+            {selectedFile && (
+                <PDFFlipViewer
+                    fileUrl={selectedFile}
+                    onClose={() => setSelectedFile(null)}
+                />
             )}
         </div>
     );

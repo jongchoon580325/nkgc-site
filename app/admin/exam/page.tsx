@@ -35,6 +35,7 @@ export default function AdminExamPage() {
 
     // Settings State
     const [gridColumns, setGridColumns] = useState(4);
+    const [viewMode, setViewMode] = useState<'new_tab' | 'flip_book'>('new_tab');
 
     useEffect(() => {
         fetchMaterials();
@@ -66,6 +67,7 @@ export default function AdminExamPage() {
                     ? JSON.parse(data.settings)
                     : data.settings;
                 setGridColumns(settings.gridColumns || 4);
+                setViewMode(settings.viewMode || 'new_tab');
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
@@ -78,7 +80,10 @@ export default function AdminExamPage() {
                 method: 'PUT', // Changed from POST to PUT
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    settings: { gridColumns }, // Send as object, API will stringify it
+                    settings: {
+                        gridColumns,
+                        viewMode
+                    }, // Send as object, API will stringify it
                 }),
             });
             if (res.ok) {
@@ -204,21 +209,36 @@ export default function AdminExamPage() {
             {/* Settings Panel */}
             <div className="bg-white p-4 rounded-lg shadow mb-6 border border-gray-200">
                 <h2 className="text-lg font-semibold mb-4">화면 설정</h2>
-                <div className="flex items-center gap-4">
-                    <label className="text-sm font-medium text-gray-700">그리드 열 개수:</label>
-                    <select
-                        value={gridColumns}
-                        onChange={(e) => setGridColumns(Number(e.target.value))}
-                        className="border border-gray-300 rounded px-3 py-1.5"
-                    >
-                        <option value={2}>2열</option>
-                        <option value={3}>3열</option>
-                        <option value={4}>4열</option>
-                        <option value={5}>5열</option>
-                    </select>
+                <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">그리드 열 개수:</label>
+                        <select
+                            value={gridColumns}
+                            onChange={(e) => setGridColumns(Number(e.target.value))}
+                            className="border border-gray-300 rounded px-3 py-1.5"
+                        >
+                            <option value={2}>2열</option>
+                            <option value={3}>3열</option>
+                            <option value={4}>4열</option>
+                            <option value={5}>5열</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">보기 방식:</label>
+                        <select
+                            value={viewMode}
+                            onChange={(e) => setViewMode(e.target.value as 'new_tab' | 'flip_book')}
+                            className="border border-gray-300 rounded px-3 py-1.5"
+                        >
+                            <option value="new_tab">새 창에서 열기 (기본)</option>
+                            <option value="flip_book">책장 넘겨보기 (뷰어)</option>
+                        </select>
+                    </div>
+
                     <button
                         onClick={handleSaveSettings}
-                        className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-700"
+                        className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-700 ml-auto"
                     >
                         설정 저장
                     </button>
