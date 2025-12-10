@@ -30,6 +30,7 @@ model User {
   approvedBy    Int?      @map("approved_by")
   approvedAt    DateTime? @map("approved_at")
   rejectedReason String?  @map("rejected_reason")
+  rejectedAt    DateTime? @map("rejected_at")
   
   // 기타
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -226,9 +227,11 @@ model HeroConfig {
   // 배경 설정
   backgroundImage       String?  @map("background_image") // PC용 배경 이미지 URL
   backgroundImageMobile String?  @map("background_image_mobile") // 모바일용 배경 이미지
-  animationType         String   @default("space") @map("animation_type") // space, zoom, fade, static
+  animationType         String   @default("static") @map("animation_type") // static, kenburns, wave, pulse, pan
+  animationSpeed        String   @default("normal") @map("animation_speed") // slow, normal, fast
   
   // 텍스트 콘텐츠 (옵션)
+  hideText              Boolean  @default(false) @map("hide_text") // 텍스트 숨기기 (배경만 표시)
   titleText             String?  @map("title_text") // H1 (기본: "Coram Deo")
   subtitleText          String?  @map("subtitle_text") // H3 (기본: "대한예수교...")
   motto1                String?  // 모토 1

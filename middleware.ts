@@ -24,8 +24,14 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
 
-        // 회원관리 페이지는 최고관리자만 접근 가능
-        if (request.nextUrl.pathname.startsWith('/admin/users') && userRole !== 'super_admin') {
+        // 회원관리/가입승인 페이지는 최고관리자(super_admin, admin) 접근 가능
+        const superAdminRoles = ['super_admin', 'admin', 'ADMIN', 'SUPER_ADMIN'];
+        const memberManagementPaths = ['/admin/users', '/admin/approval'];
+        const isMemberManagementPage = memberManagementPaths.some(path =>
+            request.nextUrl.pathname.startsWith(path)
+        );
+
+        if (isMemberManagementPage && !superAdminRoles.includes(userRole)) {
             return NextResponse.redirect(new URL('/admin', request.url));
         }
     }

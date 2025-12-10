@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
         // 상태 필터
         if (status === 'pending') {
             where.isApproved = false;
-            where.role = 'pending';
         } else if (status === 'approved') {
             where.isApproved = true;
         }
+        // status === 'all' 이면 필터 없이 전체 조회
 
         // 직분 필터
         if (position && position !== 'all') {
@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
                 role: true,
                 isApproved: true,
                 createdAt: true,
-                lastLoginAt: true
+                lastLoginAt: true,
+                rejectedReason: true,
+                rejectedAt: true
             }
         });
 

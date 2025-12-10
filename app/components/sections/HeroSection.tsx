@@ -1,63 +1,183 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface HeroConfig {
+    id: number;
+    name: string;
+    isActive: boolean;
+    backgroundImage: string | null;
+    backgroundImageMobile: string | null;
+    animationType: string;
+    animationSpeed: string;
+    hideText: boolean;
+    titleText: string | null;
+    subtitleText: string | null;
+    motto1: string | null;
+    motto2: string | null;
+    motto3: string | null;
+    descriptionText: string | null;
+}
+
+// 애니메이션 타입에 따른 CSS 클래스 매핑
+const ANIMATION_CLASSES: Record<string, string> = {
+    static: '',
+    kenburns: 'hero-anim-kenburns',
+    wave: 'hero-anim-wave',
+    pulse: 'hero-anim-pulse',
+    pan: 'hero-anim-pan',
+};
+
+// 속도 CSS 클래스 매핑
+const SPEED_CLASSES: Record<string, string> = {
+    slow: 'hero-speed-slow',
+    normal: 'hero-speed-normal',
+    fast: 'hero-speed-fast',
+};
+
 export default function HeroSection() {
+    const [config, setConfig] = useState<HeroConfig | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchActiveConfig = async () => {
+            try {
+                const res = await fetch('/api/hero-config/active');
+                if (res.ok) {
+                    const data = await res.json();
+                    setConfig(data);
+                }
+            } catch (error) {
+                console.error('Error fetching hero config:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchActiveConfig();
+    }, []);
+
+    // 텍스트 표시 여부
+    const showText = !config?.hideText;
+
+    // 배경 이미지와 애니메이션 클래스 결정
+    const hasCustomBackground = config?.backgroundImage;
+    const animationClass = hasCustomBackground
+        ? ANIMATION_CLASSES[config?.animationType || 'static'] || ''
+        : '';
+    const speedClass = hasCustomBackground
+        ? SPEED_CLASSES[config?.animationSpeed || 'normal'] || ''
+        : '';
+
     return (
         <section className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center overflow-hidden">
-            {/* Space background with dark overlay */}
-            <div className="absolute inset-0 space-bg opacity-80" />
+            {/* SVG Filter for Wave Effect */}
+            <svg className="hidden">
+                <defs>
+                    <filter id="hero-wave-filter">
+                        <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="0.01"
+                            numOctaves="3"
+                            result="noise"
+                        >
+                            <animate
+                                attributeName="baseFrequency"
+                                dur="30s"
+                                values="0.01;0.02;0.01"
+                                repeatCount="indefinite"
+                            />
+                        </feTurbulence>
+                        <feDisplacementMap
+                            in="SourceGraphic"
+                            in2="noise"
+                            scale="10"
+                            xChannelSelector="R"
+                            yChannelSelector="G"
+                        />
+                    </filter>
+                </defs>
+            </svg>
+
+            {/* Background Layer */}
+            {hasCustomBackground ? (
+                /* Custom Background Image with Animation */
+                <div className="absolute inset-0">
+                    <div
+                        className={`absolute inset-0 bg-center ${animationClass} ${speedClass}`}
+                        style={{
+                            backgroundImage: `url(${config?.backgroundImage})`,
+                            backgroundSize: '100% 100%',
+                        }}
+                    />
+                    {/* Dark overlay for text readability */}
+                    <div className="absolute inset-0 hero-overlay" />
+                </div>
+            ) : (
+                /* Default Space Animation Background */
+                <div className="absolute inset-0 space-bg opacity-80" />
+            )}
 
             {/* Content */}
-            <div className="relative z-10 container-custom text-center text-white px-4">
-                <div className="max-w-4xl mx-auto">
-                    {/* Main Slogan */}
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
-                        Coram Deo
-                    </h1>
+            <div className="relative z-10 container-custom text-center text-white px-4 h-full flex flex-col justify-center">
+                <div className="max-w-4xl mx-auto mb-32">
+                    {/* Text Content - Only show if not hidden */}
+                    {showText && (
+                        <>
+                            {/* Main Slogan */}
+                            {config?.titleText && (
+                                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
+                                    {config.titleText}
+                                </h1>
+                            )}
 
-                    {/* Organization Name */}
-                    <p className="text-xl md:text-2xl lg:text-3xl font-semibold mb-8 opacity-95">
-                        대한예수교 장로회 남경기노회
-                    </p>
+                            {/* Organization Name */}
+                            {config?.subtitleText && (
+                                <p className="text-xl md:text-2xl lg:text-3xl font-semibold mb-8 opacity-95">
+                                    {config.subtitleText}
+                                </p>
+                            )}
 
+                            {/* Motto */}
+                            {(config?.motto1 || config?.motto2 || config?.motto3) && (
+                                <div className="mb-8 space-y-4 text-lg md:text-xl lg:text-2xl leading-relaxed max-w-3xl mx-auto">
+                                    {config?.motto1 && <p className="font-bold text-white">{config.motto1}</p>}
+                                    {config?.motto2 && <p className="font-bold text-white">{config.motto2}</p>}
+                                    {config?.motto3 && <p className="font-bold text-white">{config.motto3}</p>}
+                                </div>
+                            )}
 
-                    {/* Motto */}
-                    <div className="mb-8 space-y-4 text-lg md:text-xl lg:text-2xl leading-relaxed max-w-3xl mx-auto">
-                        <p className="font-bold text-white">
-                            1. 우리는 창조주 하나님을 믿습니다.
-                        </p>
-                        <p className="font-bold text-white">
-                            2. 우리는 구세주 예수님을 믿습니다.
-                        </p>
-                        <p className="font-bold text-white">
-                            3. 우리는 보혜사 성령님을 믿습니다.
-                        </p>
-                    </div>
+                            {/* Subtitle */}
+                            {config?.descriptionText && (
+                                <div className="mb-10 text-base md:text-lg opacity-90">
+                                    <p className="italic">{config.descriptionText}</p>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
 
-                    {/* Subtitle */}
-                    <div className="mb-10 text-base md:text-lg opacity-90">
-                        <p className="italic">
-                            Living as Christians before the Word of God.
-                        </p>
-                    </div>
-
-                    {/* Call to Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a
-                            href="/board/FORM_ADMIN"
-                            className="px-8 py-4 bg-white text-brand-700 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                        >
-                            노회 행정 서식 다운로드
-                        </a>
-                        <a
-                            href="/board/NOTICE"
-                            className="px-8 py-4 bg-accent-500 text-white rounded-lg font-semibold text-lg hover:bg-accent-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 border-2 border-white/30"
-                        >
-                            최신 노회 공지 확인
-                        </a>
-                    </div>
+            {/* Call to Action Buttons (Moved to Bottom) */}
+            <div className="absolute bottom-[140px] left-0 right-0 z-20 px-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a
+                        href="/board/FORM_ADMIN"
+                        className="px-8 py-4 bg-white text-brand-700 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    >
+                        노회 행정 서식 다운로드
+                    </a>
+                    <a
+                        href="/board/NOTICE"
+                        className="px-8 py-4 bg-accent-500 text-white rounded-lg font-semibold text-lg hover:bg-accent-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 border-2 border-white/30"
+                    >
+                        최신 노회 공지 확인
+                    </a>
                 </div>
             </div>
 
             {/* Decorative Bottom Wave */}
-            <div className="absolute bottom-0 left-0 right-0">
+            <div className="absolute bottom-0 left-0 right-0 z-10">
                 <svg
                     viewBox="0 0 1440 120"
                     fill="none"
@@ -71,5 +191,5 @@ export default function HeroSection() {
                 </svg>
             </div>
         </section>
-    )
+    );
 }

@@ -54,7 +54,8 @@ export default function AdminSidebar() {
                 </svg>
             ),
             submenu: [
-                { name: '정회원관리', href: '/admin/members' },
+                { name: '회원관리', href: '/admin/members' },
+                { name: '가입승인 관리', href: '/admin/approval' },
                 { name: '상비부관리', href: '/admin/standing-committees' },
                 { name: '상회비관리', href: '/admin/fees-status' },
                 { name: '별명부관리', href: '/admin/separate-registry' },
@@ -217,8 +218,8 @@ export default function AdminSidebar() {
                                     }
                                 }}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${active && !item.submenu // 단일 메뉴이면서 활성화된 경우
-                                        ? 'bg-primary-blue text-white shadow-lg'
-                                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                    ? 'bg-primary-blue text-white shadow-lg'
+                                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                                     } ${active && item.submenu ? 'text-white' : ''}`} // 서브메뉴가 있고 활성화된 경우 텍스트 밝게
                             >
                                 {item.href && !item.submenu ? (
@@ -256,8 +257,8 @@ export default function AdminSidebar() {
                                             key={sub.href}
                                             href={sub.href}
                                             className={`block px-4 py-2 text-sm rounded-lg transition-colors ${isActive(sub.href)
-                                                    ? 'bg-gray-700 text-white font-medium'
-                                                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                                ? 'bg-gray-700 text-white font-medium'
+                                                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                                                 }`}
                                         >
                                             {sub.name}

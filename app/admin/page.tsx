@@ -234,7 +234,11 @@ export default function AdminDashboard() {
                     </div>
                     <div className="divide-y divide-gray-200">
                         {recentApplications.map((app) => (
-                            <div key={app.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div
+                                key={app.id}
+                                className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                                onClick={() => router.push('/admin/approval')}
+                            >
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-semibold text-gray-900">{app.name}</p>
@@ -246,12 +250,15 @@ export default function AdminDashboard() {
                                         <p className="text-sm text-gray-500">
                                             {new Date(app.createdAt).toLocaleDateString('ko-KR')}
                                         </p>
-                                        <Link
-                                            href={`/admin/users?status=pending`}
-                                            className="text-sm text-primary-blue hover:underline"
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.push('/admin/approval');
+                                            }}
+                                            className="text-sm text-primary-blue hover:underline font-medium"
                                         >
-                                            승인 처리
-                                        </Link>
+                                            승인 처리 →
+                                        </button>
                                     </div>
                                 </div>
                             </div>

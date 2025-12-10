@@ -2,28 +2,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
-// GET: 정회원 목록 조회 (관리자용)
+export const dynamic = 'force-dynamic';
+
+// GET: 회원 목록 조회 (관리자용) - 모든 승인된 회원
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
-        const role = searchParams.get('role'); // 'pastor' or 'elder'
+        const memberType = searchParams.get('memberType'); // 'all', 'member', 'guest'
+        const search = searchParams.get('search');
 
         const where: any = {
             isApproved: true,
-            role: {
-                in: ['pastor', 'elder']
-            }
+            // 관리자(super_admin, admin)는 제외
+            role: { notIn: ['super_admin', 'admin'] }
         };
 
-        // Role filter
-        if (role && (role === 'pastor' || role === 'elder')) {
-            where.role = role;
+        // 회원 유형 필터 (한글 직분명 기준)
+        if (memberType === 'member') {
+            // 정회원 (목사/장로)
+            where.position = { in: ['목사', '장로', 'pastor', 'elder'] };
+        } else if (memberType === 'guest') {
+            // 일반회원 (전도사/일반교인)
+            where.position = { in: ['전도사', '교인', '일반교인', 'evangelist', 'member'] };
+        }
+        // 'all'이거나 없으면 전체 조회 (관리자 제외)
+
+        // 검색 필터
+        if (search) {
+            where.OR = [
+                { name: { contains: search } },
+                { churchName: { contains: search } },
+                { phone: { contains: search } }
+            ];
         }
 
         const members = await prisma.user.findMany({
             where,
             select: {
                 id: true,
+                username: true,
                 name: true,
                 churchName: true,
                 position: true,
@@ -42,7 +59,7 @@ export async function GET(request: NextRequest) {
             data: members
         });
     } catch (error) {
-        console.error('정회원 목록 조회 오류:', error);
+        console.error('회원 목록 조회 오류:', error);
         return NextResponse.json(
             { success: false, error: '데이터를 불러올 수 없습니다.' },
             { status: 500 }
@@ -50,34 +67,48 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST: 정회원 추가
+// POST: 회원 추가
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, churchName, position, phone, role } = body;
+        const { username, password, name, churchName, position, phone, role } = body;
 
-        // 필수 항목 검증 (phone은 선택사항)
-        if (!name || !churchName || !position || !role) {
+        // 필수 항목 검증
+        if (!username || !password || !name || !churchName || !position) {
             return NextResponse.json(
                 { success: false, error: '필수 항목을 모두 입력해주세요.' },
                 { status: 400 }
             );
         }
 
-        // 역할 검증
-        if (role !== 'pastor' && role !== 'elder') {
+        // 직분 검증
+        const validPositions = ['pastor', 'elder', 'evangelist', 'member'];
+        if (!validPositions.includes(position)) {
             return NextResponse.json(
-                { success: false, error: '올바른 역할을 선택해주세요.' },
+                { success: false, error: '올바른 직분을 선택해주세요.' },
                 { status: 400 }
             );
         }
 
-        // 기본 비밀번호 설정
-        const defaultPassword = 'presbytery2024';
-        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        // 아이디 중복 확인
+        const existingUser = await prisma.user.findUnique({
+            where: { username }
+        });
 
-        // 고유 사용자명 생성 (role_timestamp)
-        const username = `${role}_${Date.now()}`;
+        if (existingUser) {
+            return NextResponse.json(
+                { success: false, error: '이미 사용 중인 아이디입니다.' },
+                { status: 400 }
+            );
+        }
+
+        // 비밀번호 해싱
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 직분에 따른 기본 권한 설정
+        // 목사/장로 -> member(정회원), 그 외 -> guest(일반회원)
+        const defaultRole = (position === 'pastor' || position === 'elder') ? 'member' : 'guest';
+        const finalRole = role || defaultRole;
 
         const member = await prisma.user.create({
             data: {
@@ -86,12 +117,14 @@ export async function POST(request: NextRequest) {
                 name,
                 churchName,
                 position,
-                phone: phone || '010-0000-0000', // 연락처가 없으면 기본값 사용
-                role,
-                isApproved: true
+                phone: phone || '010-0000-0000',
+                role: finalRole,
+                isApproved: true,
+                approvedAt: new Date()
             },
             select: {
                 id: true,
+                username: true,
                 name: true,
                 churchName: true,
                 position: true,
@@ -115,3 +148,4 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+

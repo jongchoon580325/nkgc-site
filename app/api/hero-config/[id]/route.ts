@@ -24,13 +24,16 @@ export async function PATCH(
                 backgroundImage: data.backgroundImage || null,
                 backgroundImageMobile: data.backgroundImageMobile || null,
                 animationType: data.animationType,
+                animationSpeed: data.animationSpeed || 'normal',
+                hideText: data.hideText ?? false,
                 titleText: data.titleText || null,
                 subtitleText: data.subtitleText || null,
                 motto1: data.motto1 || null,
                 motto2: data.motto2 || null,
                 motto3: data.motto3 || null,
                 descriptionText: data.descriptionText || null,
-            },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
         });
 
         return NextResponse.json(updatedConfig);

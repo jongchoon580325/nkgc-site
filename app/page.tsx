@@ -1,3 +1,4 @@
+import NoticeBar from './components/sections/NoticeBar'
 import HeroSection from './components/sections/HeroSection'
 import QuickActions from './components/sections/QuickActions'
 import NoticeNews from './components/sections/NoticeNews'
@@ -29,6 +30,9 @@ export default async function HomePage() {
 
     return (
         <main className="min-h-screen">
+            {/* Notice Bar */}
+            <NoticeBar />
+
             {/* 1단: Coram Deo */}
             <HeroSection />
 

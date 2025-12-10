@@ -18,7 +18,9 @@ export default function AdminHeader({ title }: AdminHeaderProps) {
         if (title) return title;
 
         if (pathname === '/admin') return '대시보드';
-        if (pathname.startsWith('/admin/users')) return '회원 관리';
+        if (pathname.startsWith('/admin/members')) return '회원 관리';
+        if (pathname.startsWith('/admin/approval')) return '가입승인 관리';
+        if (pathname.startsWith('/admin/users')) return '회원 관리 (Legacy)';
         if (pathname.startsWith('/admin/organizations')) return '기관 관리';
         if (pathname.startsWith('/admin/inspections')) return '시찰 관리';
         if (pathname.startsWith('/admin/officers')) return '임원 관리';

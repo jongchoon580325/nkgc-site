@@ -82,3 +82,150 @@
   color: #f5f5f5;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
 }
+
+/* ============================================
+   Hero Image Animation Effects
+   ============================================ */
+
+/* 1. Static - No animation */
+.hero-anim-static {
+  /* No animation, just display the image */
+}
+
+/* 2. Ken Burns - Slow zoom in/out effect */
+.hero-anim-kenburns {
+  animation: heroKenburns 30s ease-in-out infinite alternate;
+}
+
+@keyframes heroKenburns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+
+  100% {
+    transform: scale(1.15) translate(-2%, -2%);
+  }
+}
+
+/* 3. Wave - SVG filter wave distortion effect */
+.hero-anim-wave {
+  animation: heroWave 20s ease-in-out infinite;
+  filter: url(#hero-wave-filter);
+}
+
+@keyframes heroWave {
+
+  0%,
+  100% {
+    transform: scale(1.02) translateY(0);
+  }
+
+  25% {
+    transform: scale(1.03) translateY(-5px);
+  }
+
+  50% {
+    transform: scale(1.04) translateY(0);
+  }
+
+  75% {
+    transform: scale(1.03) translateY(5px);
+  }
+}
+
+/* 4. Pulse - Subtle breathing effect */
+.hero-anim-pulse {
+  animation: heroPulse 8s ease-in-out infinite;
+}
+
+@keyframes heroPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.05);
+  }
+}
+
+/* 5. Pan - Slow horizontal movement */
+.hero-anim-pan {
+  animation: heroPan 40s ease-in-out infinite alternate;
+}
+
+@keyframes heroPan {
+  0% {
+    transform: scale(1.1) translateX(0);
+  }
+
+  100% {
+    transform: scale(1.1) translateX(-5%);
+  }
+}
+
+/* Hero background overlay for text readability */
+.hero-overlay {
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* ============================================
+   Animation Speed Modifiers
+   ============================================ */
+
+/* Slow speed - 2x duration */
+.hero-speed-slow.hero-anim-kenburns {
+  animation-duration: 60s;
+}
+
+.hero-speed-slow.hero-anim-wave {
+  animation-duration: 40s;
+}
+
+.hero-speed-slow.hero-anim-pulse {
+  animation-duration: 16s;
+}
+
+.hero-speed-slow.hero-anim-pan {
+  animation-duration: 80s;
+}
+
+/* Normal speed - default */
+.hero-speed-normal.hero-anim-kenburns {
+  animation-duration: 30s;
+}
+
+.hero-speed-normal.hero-anim-wave {
+  animation-duration: 20s;
+}
+
+.hero-speed-normal.hero-anim-pulse {
+  animation-duration: 8s;
+}
+
+.hero-speed-normal.hero-anim-pan {
+  animation-duration: 40s;
+}
+
+/* Fast speed - 0.5x duration */
+.hero-speed-fast.hero-anim-kenburns {
+  animation-duration: 15s;
+}
+
+.hero-speed-fast.hero-anim-wave {
+  animation-duration: 10s;
+}
+
+.hero-speed-fast.hero-anim-pulse {
+  animation-duration: 4s;
+}
+
+.hero-speed-fast.hero-anim-pan {
+  animation-duration: 20s;
+}

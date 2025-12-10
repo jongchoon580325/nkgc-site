@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface Member {
     id: number
@@ -12,24 +13,32 @@ interface Member {
     role: string
     isApproved: boolean
     createdAt: string
+    username?: string
 }
 
 export default function MembersManagementPage() {
+    const { data: session } = useSession()
     const router = useRouter()
     const [members, setMembers] = useState<Member[]>([])
     const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+    // 권한 확인: admin 또는 master 아이디인 경우만 ID 수정 가능
+    const isSuperAdmin = session?.user && ['admin', 'master'].includes((session.user as any).username || '');
+
     // Filters
-    const [roleFilter, setRoleFilter] = useState<string>('all')
+    const [memberTypeFilter, setMemberTypeFilter] = useState<string>('all')
     const [searchQuery, setSearchQuery] = useState('')
 
     // Modal states
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+    const [deleteMember, setDeleteMember] = useState<Member | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [csvFile, setCsvFile] = useState<File | null>(null)
 
     // Form state
@@ -38,7 +47,9 @@ export default function MembersManagementPage() {
         churchName: '',
         position: '',
         phone: '',
-        role: 'pastor'
+        role: 'pastor',
+        username: '',
+        password: ''
     })
 
     useEffect(() => {
@@ -47,12 +58,12 @@ export default function MembersManagementPage() {
 
     useEffect(() => {
         filterMembers()
-    }, [members, roleFilter, searchQuery])
+    }, [members, memberTypeFilter, searchQuery])
 
     const fetchMembers = async () => {
         try {
             setIsLoading(true)
-            const response = await fetch('/api/administration/members-status')
+            const response = await fetch('/api/admin/members', { cache: 'no-store' })
             const result = await response.json()
 
             if (result.success) {
@@ -70,9 +81,17 @@ export default function MembersManagementPage() {
     const filterMembers = () => {
         let filtered = [...members]
 
-        // Role filter
-        if (roleFilter !== 'all') {
-            filtered = filtered.filter(m => m.role === roleFilter)
+        // Member type filter (정회원: 목사/장로, 일반회원: 전도사/일반교인)
+        if (memberTypeFilter === 'member') {
+            filtered = filtered.filter(m =>
+                m.position === 'pastor' || m.position === 'elder' ||
+                m.position === '목사' || m.position === '장로'
+            )
+        } else if (memberTypeFilter === 'guest') {
+            filtered = filtered.filter(m =>
+                m.position === 'evangelist' || m.position === 'member' ||
+                m.position === '전도사' || m.position === '교인' || m.position === '일반교인'
+            )
         }
 
         // Search filter
@@ -93,23 +112,41 @@ export default function MembersManagementPage() {
 
     const handleEdit = (member: Member) => {
         setSelectedMember(member)
+        // 기존 role 값을 position 기반으로 변환 (구 체계 호환)
+        let memberRole = member.role;
+        if (['pastor', 'elder'].includes(member.role)) {
+            memberRole = 'member'; // 정회원
+        } else if (['evangelist'].includes(member.role)) {
+            memberRole = 'guest'; // 일반회원
+        }
         setFormData({
             name: member.name,
             churchName: member.churchName,
             position: member.position,
             phone: member.phone,
-            role: member.role
+            role: memberRole,
+            username: member.username || '',
+            password: ''
         })
         setIsEditModalOpen(true)
+    }
+
+    // 직분 변경 시 권한 자동 설정
+    const handlePositionChange = (newPosition: string) => {
+        const isMemberPosition = ['목사', '장로', 'pastor', 'elder'].includes(newPosition);
+        const newRole = isMemberPosition ? 'member' : 'guest';
+        setFormData({ ...formData, position: newPosition, role: newRole });
     }
 
     const handleAdd = () => {
         setFormData({
             name: '',
             churchName: '',
-            position: '',
+            position: '목사',
             phone: '',
-            role: 'pastor'
+            role: 'member',  // 목사 기본 -> 정회원
+            username: '',
+            password: ''
         })
         setIsAddModalOpen(true)
     }
@@ -131,6 +168,7 @@ export default function MembersManagementPage() {
                 showMessage('success', '회원 정보가 수정되었습니다.')
                 setIsEditModalOpen(false)
                 fetchMembers()
+                router.refresh()
             } else {
                 showMessage('error', result.error || '수정에 실패했습니다.')
             }
@@ -163,13 +201,22 @@ export default function MembersManagementPage() {
         }
     }
 
-    const handleDelete = async (member: Member) => {
-        if (!confirm(`${member.name} 회원을 정말 삭제하시겠습니까?`)) {
-            return
-        }
+    const openDeleteModal = (member: Member) => {
+        setDeleteMember(member)
+        setIsDeleteModalOpen(true)
+    }
+
+    const closeDeleteModal = () => {
+        setDeleteMember(null)
+        setIsDeleteModalOpen(false)
+    }
+
+    const handleDelete = async () => {
+        if (!deleteMember) return
+        setIsDeleting(true)
 
         try {
-            const response = await fetch(`/api/admin/members/${member.id}`, {
+            const response = await fetch(`/api/admin/members/${deleteMember.id}`, {
                 method: 'DELETE'
             })
 
@@ -178,33 +225,66 @@ export default function MembersManagementPage() {
             if (result.success) {
                 showMessage('success', '회원이 삭제되었습니다.')
                 fetchMembers()
+                closeDeleteModal()
             } else {
                 showMessage('error', result.error || '삭제에 실패했습니다.')
             }
         } catch (err) {
             showMessage('error', '삭제 중 오류가 발생했습니다.')
+        } finally {
+            setIsDeleting(false)
         }
     }
 
-    const getRoleBadgeColor = (role: string) => {
+    const getRoleBadgeColor = (role: string, position?: string) => {
+        // 권한 기반 색상
         switch (role) {
-            case 'pastor':
+            case 'super_admin':
+                return 'bg-red-100 text-red-800'
+            case 'admin':
+                return 'bg-orange-100 text-orange-800'
+            case 'member':
                 return 'bg-blue-100 text-blue-800'
-            case 'elder':
-                return 'bg-purple-100 text-purple-800'
+            case 'guest':
+                return 'bg-green-100 text-green-800'
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800'
             default:
+                // 구 권한 체계 호환 (position 기반)
+                if (position === 'pastor' || position === 'elder') {
+                    return 'bg-blue-100 text-blue-800'
+                }
                 return 'bg-gray-100 text-gray-800'
         }
     }
 
-    const getRoleLabel = (role: string) => {
+    const getRoleLabel = (role: string, position?: string) => {
         switch (role) {
-            case 'pastor':
-                return '목사'
-            case 'elder':
-                return '장로'
+            case 'super_admin':
+                return '최고관리자'
+            case 'admin':
+                return '일반관리자'
+            case 'member':
+                return '정회원'
+            case 'guest':
+                return '일반회원'
+            case 'pending':
+                return '승인대기'
             default:
+                // 구 권한 체계 호환
+                if (role === 'pastor') return '목사'
+                if (role === 'elder') return '장로'
                 return role
+        }
+    }
+
+    const getPositionLabel = (position: string) => {
+        switch (position) {
+            case 'pastor': return '목사'
+            case 'elder': return '장로'
+            case 'evangelist': return '전도사'
+            case 'member': return '일반교인'
+            default: return position
         }
     }
 
@@ -356,17 +436,17 @@ export default function MembersManagementPage() {
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Role Filter */}
+                    {/* Member Type Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">구분 필터</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">회원 구분</label>
                         <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
+                            value={memberTypeFilter}
+                            onChange={(e) => setMemberTypeFilter(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent"
                         >
                             <option value="all">전체</option>
-                            <option value="pastor">목사회원</option>
-                            <option value="elder">장로총대</option>
+                            <option value="member">정회원 (목사/장로)</option>
+                            <option value="guest">일반회원 (전도사/일반교인)</option>
                         </select>
                     </div>
 
@@ -405,8 +485,11 @@ export default function MembersManagementPage() {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
+                                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                                        번호
+                                    </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        구분
+                                        직분
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         이름
@@ -415,7 +498,7 @@ export default function MembersManagementPage() {
                                         교회명
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        직분
+                                        권한
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         작업
@@ -423,15 +506,14 @@ export default function MembersManagementPage() {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredMembers.map((member) => (
+                                {filteredMembers.map((member, index) => (
                                     <tr key={member.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                                            <span className="text-sm text-gray-500">{index + 1}</span>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span
-                                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(
-                                                    member.role
-                                                )}`}
-                                            >
-                                                {getRoleLabel(member.role)}
+                                            <span className="text-sm font-medium text-gray-900">
+                                                {getPositionLabel(member.position)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -441,7 +523,13 @@ export default function MembersManagementPage() {
                                             <div className="text-sm text-gray-900">{member.churchName}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-500">{member.position}</div>
+                                            <span
+                                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(
+                                                    member.role, member.position
+                                                )}`}
+                                            >
+                                                {getRoleLabel(member.role, member.position)}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button
@@ -451,7 +539,7 @@ export default function MembersManagementPage() {
                                                 수정
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(member)}
+                                                onClick={() => openDeleteModal(member)}
                                                 className="text-red-600 hover:text-red-900"
                                             >
                                                 삭제
@@ -493,13 +581,20 @@ export default function MembersManagementPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">직분</label>
-                                <input
-                                    type="text"
+                                <select
                                     value={formData.position}
-                                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                                    onChange={(e) => handlePositionChange(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
                                     required
-                                />
+                                >
+                                    <option value="목사">목사</option>
+                                    <option value="장로">장로</option>
+                                    <option value="전도사">전도사</option>
+                                    <option value="교인">교인</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    목사/장로 → 정회원, 전도사/교인 → 일반회원 자동 설정
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">연락처</label>
@@ -512,16 +607,49 @@ export default function MembersManagementPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">구분</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">회원권한</label>
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
                                     required
                                 >
-                                    <option value="pastor">목사</option>
-                                    <option value="elder">장로</option>
+                                    <option value="member">정회원 (글쓰기, 보기)</option>
+                                    <option value="guest">일반회원 (보기만)</option>
                                 </select>
+                            </div>
+
+                            <div className="border-t border-gray-200 my-4 pt-4">
+                                <h3 className="text-sm font-bold text-gray-900 mb-3">계정 정보 {isSuperAdmin ? '(최고관리자 수정 가능)' : '(선택사항)'}</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
+                                        <input
+                                            type="text"
+                                            value={formData.username}
+                                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                            disabled={!isSuperAdmin}
+                                            className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue ${!isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                                                }`}
+                                        />
+                                        {!isSuperAdmin ? (
+                                            <p className="mt-1 text-xs text-gray-500">아이디는 최고관리자만 변경할 수 있습니다.</p>
+                                        ) : (
+                                            <p className="mt-1 text-xs text-blue-600 font-medium">최고관리자 권한으로 아이디 수정이 가능합니다.</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 재설정</label>
+                                        <input
+                                            type="password"
+                                            value={formData.password || ''}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            placeholder="변경하려면 입력하세요"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">비워두면 기존 비밀번호가 유지됩니다.</p>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button
@@ -591,6 +719,34 @@ export default function MembersManagementPage() {
                                     <option value="elder">장로</option>
                                 </select>
                             </div>
+
+                            <div className="border-t border-gray-200 my-4 pt-4">
+                                <h3 className="text-sm font-bold text-gray-900 mb-3">계정 정보</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">아이디 <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            value={formData.username}
+                                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                            required
+                                            placeholder="로그인에 사용할 아이디"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="password"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                            required
+                                            placeholder="비밀번호 설정"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
@@ -658,6 +814,70 @@ export default function MembersManagementPage() {
                                     취소
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && deleteMember && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={closeDeleteModal}
+                    />
+
+                    {/* Modal */}
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-200">
+                        {/* Header */}
+                        <div className="flex items-center gap-4 p-6 border-b border-gray-100">
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <span className="text-2xl">🗑</span>
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-900">회원 삭제</h2>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-700">
+                                <strong>{deleteMember.name}</strong> 회원을 삭제하시겠습니까?
+                            </p>
+                            <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div><span className="text-gray-500">소속교회:</span> {deleteMember.churchName}</div>
+                                    <div><span className="text-gray-500">직분:</span> {deleteMember.position}</div>
+                                </div>
+                            </div>
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                                <p>⚠️ 삭제 후에는 복구할 수 없습니다.</p>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex gap-3 p-6 pt-0">
+                            <button
+                                onClick={closeDeleteModal}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-medium disabled:opacity-50"
+                            >
+                                {isDeleting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        삭제 중...
+                                    </span>
+                                ) : '삭제'}
+                            </button>
                         </div>
                     </div>
                 </div>

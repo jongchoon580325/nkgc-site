@@ -7,7 +7,7 @@ export interface User {
     phone: string;
     churchName: string;
     position: 'pastor' | 'elder' | 'evangelist' | 'member';
-    role: 'admin' | 'pastor' | 'elder' | 'evangelist' | 'member' | 'pending';
+    role: 'super_admin' | 'admin' | 'member' | 'guest' | 'pending';
     email: string | null;
     isApproved: boolean;
     approvedBy: number | null;
@@ -50,12 +50,21 @@ export const POSITION_LABELS: Record<string, string> = {
     member: '일반교인'
 };
 
-// 권한 레이블
+// 권한 레이블 (새로운 5단계 권한 체계)
 export const ROLE_LABELS: Record<string, string> = {
-    admin: '관리자',
-    pastor: '목사',
-    elder: '장로',
-    evangelist: '전도사',
-    member: '일반교인',
+    super_admin: '최고관리자',
+    admin: '일반관리자',
+    member: '정회원',      // 목사/장로 - 글쓰기, 보기 권한
+    guest: '일반회원',      // 전도사/일반교인 - 보기만 권한
     pending: '승인대기'
 };
+
+// 권한별 설명
+export const ROLE_DESCRIPTIONS: Record<string, string> = {
+    super_admin: '모든 권한 (회원관리 포함)',
+    admin: '관리 권한 (회원관리 제외)',
+    member: '글쓰기, 보기 권한',
+    guest: '보기만 권한',
+    pending: '승인 대기 중'
+};
+

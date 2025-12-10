@@ -15,19 +15,26 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 중복 확인
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { username },
-                    { phone }
-                ]
-            }
+        // 아이디 중복 확인
+        const existingUsername = await prisma.user.findFirst({
+            where: { username }
         });
 
-        if (existingUser) {
+        if (existingUsername) {
             return NextResponse.json(
-                { success: false, error: '이미 사용 중인 아이디 또는 연락처입니다.' },
+                { success: false, error: '이미 사용 중인 아이디입니다.' },
+                { status: 400 }
+            );
+        }
+
+        // 연락처 중복 확인
+        const existingPhone = await prisma.user.findFirst({
+            where: { phone }
+        });
+
+        if (existingPhone) {
+            return NextResponse.json(
+                { success: false, error: '이미 사용 중인 연락처입니다.' },
                 { status: 400 }
             );
         }

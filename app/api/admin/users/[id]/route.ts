@@ -5,10 +5,11 @@ import bcrypt from 'bcrypt';
 // GET: 특정 회원 조회
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userId = parseInt(params.id);
+        const { id } = await params;
+        const userId = parseInt(id);
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -51,12 +52,13 @@ export async function GET(
 // PUT: 회원 정보 수정
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userId = parseInt(params.id);
+        const { id } = await params;
+        const userId = parseInt(id);
         const body = await request.json();
-        const { name, phone, email, churchName, position, role, password } = body;
+        const { name, phone, email, churchName, position, role, password, rejectedReason, rejectedAt, isApproved } = body;
 
         const updateData: any = {};
 
@@ -66,6 +68,11 @@ export async function PUT(
         if (churchName) updateData.churchName = churchName;
         if (position) updateData.position = position;
         if (role) updateData.role = role;
+        if (isApproved !== undefined) updateData.isApproved = isApproved;
+
+        // 재심사: 거부 관련 필드 초기화
+        if (rejectedReason === null) updateData.rejectedReason = null;
+        if (rejectedAt === null) updateData.rejectedAt = null;
 
         // 비밀번호 변경
         if (password) {
@@ -106,10 +113,11 @@ export async function PUT(
 // DELETE: 회원 삭제
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userId = parseInt(params.id);
+        const { id } = await params;
+        const userId = parseInt(id);
 
         await prisma.user.delete({
             where: { id: userId }

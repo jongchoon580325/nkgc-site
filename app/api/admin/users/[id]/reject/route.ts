@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma';
 // POST: 회원 거부
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userId = parseInt(params.id);
+        const { id } = await params;
+        const userId = parseInt(id);
         const body = await request.json();
         const { reason } = body;
 
@@ -15,6 +16,7 @@ export async function POST(
             where: { id: userId },
             data: {
                 rejectedReason: reason,
+                rejectedAt: new Date(),
                 isApproved: false
             }
         });

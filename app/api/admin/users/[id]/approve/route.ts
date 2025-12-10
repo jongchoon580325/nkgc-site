@@ -4,26 +4,23 @@ import { prisma } from '@/lib/prisma';
 // POST: 회원 승인
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userId = parseInt(params.id);
+        const { id } = await params;
+        const userId = parseInt(id);
         const body = await request.json();
         const { position } = body;
 
         // 직분에 따라 권한 자동 설정
-        const roleMapping: Record<string, string> = {
-            pastor: 'pastor',
-            elder: 'elder',
-            evangelist: 'evangelist',
-            member: 'member'
-        };
+        // 목사/장로 -> member(정회원), 그 외 -> guest(일반회원)
+        const roleByPosition = (position === 'pastor' || position === 'elder') ? 'member' : 'guest';
 
         const user = await prisma.user.update({
             where: { id: userId },
             data: {
                 isApproved: true,
-                role: roleMapping[position] || 'member',
+                role: roleByPosition,
                 approvedAt: new Date()
             },
             select: {
