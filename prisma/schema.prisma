@@ -23,6 +23,7 @@ model User {
   // 교회 정보
   churchName    String    @map("church_name")
   position      String    // 목사, 장로, 전도사, 교인
+  category      String?   // 원로, 시무, 부목사, 전도사, 장로, 은퇴, 무임, 선교사, 기타
   role          String    @default("pending") // admin, pastor, elder, evangelist, member, pending
   
   // 승인 관련

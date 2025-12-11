@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 
 interface Member {
     id: number
     name: string
     churchName: string
     position: string
+    category?: string
     phone: string
     role: string
     isApproved: boolean
@@ -36,18 +38,31 @@ export default function MembersManagementPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isImportModalOpen, setIsImportModalOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
+    const [isOverwriteModalOpen, setIsOverwriteModalOpen] = useState(false)
     const [selectedMember, setSelectedMember] = useState<Member | null>(null)
     const [deleteMember, setDeleteMember] = useState<Member | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [isDeletingAll, setIsDeletingAll] = useState(false)
     const [csvFile, setCsvFile] = useState<File | null>(null)
+
+    // Import progress state
+    const [isImporting, setIsImporting] = useState(false)
+    const [importProgress, setImportProgress] = useState(0)
+    const [importStatus, setImportStatus] = useState('')
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(20)
 
     // Form state
     const [formData, setFormData] = useState({
         name: '',
         churchName: '',
-        position: '',
+        position: '목사',
+        category: '',
         phone: '',
-        role: 'pastor',
+        role: 'member',
         username: '',
         password: ''
     })
@@ -123,6 +138,7 @@ export default function MembersManagementPage() {
             name: member.name,
             churchName: member.churchName,
             position: member.position,
+            category: member.category || '',
             phone: member.phone,
             role: memberRole,
             username: member.username || '',
@@ -143,6 +159,7 @@ export default function MembersManagementPage() {
             name: '',
             churchName: '',
             position: '목사',
+            category: '',
             phone: '',
             role: 'member',  // 목사 기본 -> 정회원
             username: '',
@@ -259,6 +276,11 @@ export default function MembersManagementPage() {
     }
 
     const getRoleLabel = (role: string, position?: string) => {
+        // 목사/장로는 무조건 정회원으로 표시 (직분 기준 우선)
+        if (position && (position.includes('목사') || position === '장로')) {
+            return '정회원'
+        }
+
         switch (role) {
             case 'super_admin':
                 return '최고관리자'
@@ -272,8 +294,8 @@ export default function MembersManagementPage() {
                 return '승인대기'
             default:
                 // 구 권한 체계 호환
-                if (role === 'pastor') return '목사'
-                if (role === 'elder') return '장로'
+                if (role === 'pastor') return '정회원'
+                if (role === 'elder') return '정회원'
                 return role
         }
     }
@@ -290,13 +312,23 @@ export default function MembersManagementPage() {
 
     // CSV Export
     const handleExportCSV = () => {
+        const getRoleLabel = (role: string) => {
+            if (['member', 'pastor', 'elder'].includes(role)) return '정회원'
+            if (['guest', 'evangelist'].includes(role)) return '일반회원'
+            return role
+        }
+
         const csvContent = [
-            ['번호', '이름', '교회명', '직분명'], // Header
-            ...filteredMembers.map((member, index) => [
-                (index + 1).toString(),
+            ['이름', '교회명', '직분', '구분', '연락처', '회원권한', '아이디', '비밀번호'], // Header
+            ...filteredMembers.map((member) => [
                 member.name,
                 member.churchName,
-                member.position
+                member.position,
+                member.category || '',
+                member.phone,
+                getRoleLabel(member.role),
+                `${member.name}_4214`,  // 아이디: 이름_4214 패턴
+                '123456'                 // 비밀번호: 통일
             ])
         ].map(row => row.join(',')).join('\n')
 
@@ -310,9 +342,9 @@ export default function MembersManagementPage() {
     // CSV Sample Download
     const handleDownloadSample = () => {
         const sampleContent = [
-            ['번호', '이름', '교회명', '직분명'],
-            ['1', '홍길동', '중앙교회', '목사'],
-            ['2', '김철수', '동산교회', '장로'],
+            ['이름', '교회명', '직분', '구분', '연락처', '회원권한', '아이디', '비밀번호'],
+            ['홍길동', '중앙교회', '목사', '시무', '010-1234-5678', '정회원', '', ''],
+            ['김철수', '동산교회', '장로', '장로', '010-9876-5432', '정회원', '', ''],
         ].map(row => row.join(',')).join('\n')
 
         const blob = new Blob(['\uFEFF' + sampleContent], { type: 'text/csv;charset=utf-8;' })
@@ -335,12 +367,21 @@ export default function MembersManagementPage() {
                 const text = e.target?.result as string
                 const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()))
 
-                // Skip header row
-                const dataRows = rows.slice(1).filter(row => row.length >= 4 && row[1])
+                // Skip header row - new structure: 이름,교회명,직분,구분,연락처,회원권한,아이디,비밀번호
+                const dataRows = rows.slice(1).filter(row => row.length >= 3 && row[0])
 
                 if (dataRows.length === 0) {
                     showMessage('error', 'CSV 파일에 데이터가 없습니다.')
                     return
+                }
+
+                // Map role label to role value
+                const getRoleValue = (label: string, position: string) => {
+                    if (label === '정회원') return 'member'
+                    if (label === '일반회원') return 'guest'
+                    // Fallback based on position
+                    if (position.includes('목사') || position.includes('장로')) return 'member'
+                    return 'guest'
                 }
 
                 const response = await fetch('/api/admin/members/import', {
@@ -348,11 +389,14 @@ export default function MembersManagementPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         members: dataRows.map(row => ({
-                            name: row[1],
-                            churchName: row[2],
-                            position: row[3],
-                            // Map position to role: "목사" -> pastor, "장로" -> elder
-                            role: row[3].includes('목사') ? 'pastor' : row[3].includes('장로') ? 'elder' : 'member'
+                            name: row[0],                    // 이름
+                            churchName: row[1],              // 교회명
+                            position: row[2],                // 직분
+                            category: row[3] || null,        // 구분
+                            phone: row[4] || '010-0000-0000', // 연락처
+                            role: getRoleValue(row[5], row[2]), // 회원권한
+                            username: row[6] || `${row[0]}_4214`, // 아이디 (빈 값이면 이름_4214)
+                            password: row[7] || '123456'      // 비밀번호 (빈 값이면 123456)
                         }))
                     })
                 })
@@ -374,6 +418,144 @@ export default function MembersManagementPage() {
         reader.readAsText(csvFile)
     }
 
+    // Open overwrite confirmation modal when importing
+    const openOverwriteModal = () => {
+        if (!csvFile) {
+            showMessage('error', 'CSV 파일을 선택해주세요.')
+            return
+        }
+        setIsOverwriteModalOpen(true)
+    }
+
+    // Overwrite import: delete all then import
+    const handleOverwriteImport = async () => {
+        setIsOverwriteModalOpen(false)
+        setIsImporting(true)
+        setImportProgress(0)
+        setImportStatus('기존 데이터 삭제 중...')
+
+        try {
+            // Step 1: Delete all members
+            setImportProgress(10)
+            const deleteResponse = await fetch('/api/admin/members/delete-all', {
+                method: 'DELETE'
+            })
+            const deleteResult = await deleteResponse.json()
+
+            if (!deleteResult.success) {
+                showMessage('error', '기존 데이터 삭제에 실패했습니다.')
+                setIsImporting(false)
+                return
+            }
+
+            setImportProgress(30)
+            setImportStatus('CSV 파일 처리 중...')
+
+            // Step 2: Import new data with progress
+            await handleImportCSVWithProgress()
+
+        } catch (err) {
+            showMessage('error', '덮어쓰기 중 오류가 발생했습니다.')
+            setIsImporting(false)
+        }
+    }
+
+    // Import CSV with progress tracking
+    const handleImportCSVWithProgress = async () => {
+        if (!csvFile) return
+
+        const reader = new FileReader()
+        reader.onload = async (e) => {
+            try {
+                const text = e.target?.result as string
+                const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()))
+                const dataRows = rows.slice(1).filter(row => row.length >= 3 && row[0])
+
+                if (dataRows.length === 0) {
+                    showMessage('error', 'CSV 파일에 데이터가 없습니다.')
+                    setIsImporting(false)
+                    return
+                }
+
+                setImportStatus(`${dataRows.length}명 회원 등록 중...`)
+                setImportProgress(50)
+
+                // Map role label to role value
+                const getRoleValue = (label: string, position: string) => {
+                    if (label === '정회원') return 'member'
+                    if (label === '일반회원') return 'guest'
+                    if (position.includes('목사') || position.includes('장로')) return 'member'
+                    return 'guest'
+                }
+
+                const response = await fetch('/api/admin/members/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        members: dataRows.map(row => ({
+                            name: row[0],
+                            churchName: row[1],
+                            position: row[2],
+                            category: row[3] || null,
+                            phone: row[4] || '010-0000-0000',
+                            role: getRoleValue(row[5], row[2]),
+                            username: row[6] || `${row[0]}_4214`,
+                            password: row[7] || '123456'
+                        }))
+                    })
+                })
+
+                setImportProgress(90)
+                setImportStatus('완료 처리 중...')
+
+                const result = await response.json()
+
+                if (result.success) {
+                    setImportProgress(100)
+                    setImportStatus('완료!')
+                    setTimeout(() => {
+                        showMessage('success', `${result.count}명의 회원을 가져왔습니다.`)
+                        setIsImportModalOpen(false)
+                        setCsvFile(null)
+                        setIsImporting(false)
+                        setImportProgress(0)
+                        fetchMembers()
+                    }, 500)
+                } else {
+                    showMessage('error', result.error || '가져오기에 실패했습니다.')
+                    setIsImporting(false)
+                }
+            } catch (err) {
+                showMessage('error', 'CSV 파일 처리 중 오류가 발생했습니다.')
+                setIsImporting(false)
+            }
+        }
+        reader.readAsText(csvFile)
+    }
+
+    // Delete all members
+    const handleDeleteAll = async () => {
+        setIsDeletingAll(true)
+
+        try {
+            const response = await fetch('/api/admin/members/delete-all', {
+                method: 'DELETE'
+            })
+            const result = await response.json()
+
+            if (result.success) {
+                showMessage('success', `${result.count}명의 회원이 삭제되었습니다. (admin/master 계정 제외)`)
+                setIsDeleteAllModalOpen(false)
+                fetchMembers()
+            } else {
+                showMessage('error', result.error || '삭제에 실패했습니다.')
+            }
+        } catch (err) {
+            showMessage('error', '삭제 중 오류가 발생했습니다.')
+        } finally {
+            setIsDeletingAll(false)
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -403,6 +585,15 @@ export default function MembersManagementPage() {
                         CSV 내보내기
                     </button>
                     <button
+                        onClick={() => setIsDeleteAllModalOpen(true)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md flex items-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        전체 삭제
+                    </button>
+                    <button
                         onClick={() => setIsImportModalOpen(true)}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md flex items-center gap-2"
                     >
@@ -411,15 +602,15 @@ export default function MembersManagementPage() {
                         </svg>
                         CSV 가져오기
                     </button>
-                    <button
-                        onClick={handleAdd}
+                    <Link
+                        href="/admin/members/add"
                         className="px-6 py-3 bg-primary-blue text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md flex items-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         회원 추가
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -441,7 +632,10 @@ export default function MembersManagementPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">회원 구분</label>
                         <select
                             value={memberTypeFilter}
-                            onChange={(e) => setMemberTypeFilter(e.target.value)}
+                            onChange={(e) => {
+                                setMemberTypeFilter(e.target.value)
+                                setCurrentPage(1)
+                            }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent"
                         >
                             <option value="all">전체</option>
@@ -456,7 +650,10 @@ export default function MembersManagementPage() {
                         <input
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value)
+                                setCurrentPage(1)
+                            }}
                             placeholder="이름 또는 교회명으로 검색"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent"
                         />
@@ -466,10 +663,26 @@ export default function MembersManagementPage() {
 
             {/* Members List */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-gray-900">
                         회원 목록 ({filteredMembers.length}명)
                     </h2>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-gray-600">페이지당</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value))
+                                setCurrentPage(1)
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                        >
+                            <option value={10}>10개</option>
+                            <option value={20}>20개</option>
+                            <option value={50}>50개</option>
+                            <option value={100}>100개</option>
+                        </select>
+                    </div>
                 </div>
 
                 {isLoading ? (
@@ -481,75 +694,152 @@ export default function MembersManagementPage() {
                         <p className="text-gray-500">조회된 회원이 없습니다.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                        번호
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        직분
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        이름
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        교회명
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        권한
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        작업
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredMembers.map((member, index) => (
-                                    <tr key={member.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-4 whitespace-nowrap text-center">
-                                            <span className="text-sm text-gray-500">{index + 1}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-medium text-gray-900">
-                                                {getPositionLabel(member.position)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{member.churchName}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span
-                                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(
-                                                    member.role, member.position
-                                                )}`}
-                                            >
-                                                {getRoleLabel(member.role, member.position)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button
-                                                onClick={() => handleEdit(member)}
-                                                className="text-primary-blue hover:text-blue-700 mr-4"
-                                            >
-                                                수정
-                                            </button>
-                                            <button
-                                                onClick={() => openDeleteModal(member)}
-                                                className="text-red-600 hover:text-red-900"
-                                            >
-                                                삭제
-                                            </button>
-                                        </td>
+                    <>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                                            번호
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            직분
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            구분
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            이름
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            교회명
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            권한
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            작업
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredMembers
+                                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                        .map((member, index) => (
+                                            <tr key={member.id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-4 whitespace-nowrap text-center">
+                                                    <span className="text-sm text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {getPositionLabel(member.position)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-sm text-gray-700">
+                                                        {member.category || '-'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-900">{member.churchName}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(
+                                                            member.role, member.position
+                                                        )}`}
+                                                    >
+                                                        {getRoleLabel(member.role, member.position)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <Link
+                                                        href={`/admin/members/edit/${member.id}`}
+                                                        className="text-primary-blue hover:text-blue-700 mr-4"
+                                                    >
+                                                        수정
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => openDeleteModal(member)}
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        삭제
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {filteredMembers.length > itemsPerPage && (
+                            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                                <div className="text-sm text-gray-500">
+                                    {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredMembers.length)} / 총 {filteredMembers.length}명
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ««
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ‹ 이전
+                                    </button>
+
+                                    {/* Page Numbers */}
+                                    {(() => {
+                                        const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
+                                        const pages = []
+                                        let start = Math.max(1, currentPage - 2)
+                                        let end = Math.min(totalPages, start + 4)
+                                        if (end - start < 4) start = Math.max(1, end - 4)
+
+                                        for (let i = start; i <= end; i++) {
+                                            pages.push(
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(i)}
+                                                    className={`px-3 py-1 text-sm rounded ${currentPage === i
+                                                        ? 'bg-primary-blue text-white font-semibold'
+                                                        : 'text-gray-600 hover:bg-gray-100'
+                                                        }`}
+                                                >
+                                                    {i}
+                                                </button>
+                                            )
+                                        }
+                                        return pages
+                                    })()}
+
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredMembers.length / itemsPerPage), p + 1))}
+                                        disabled={currentPage >= Math.ceil(filteredMembers.length / itemsPerPage)}
+                                        className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        다음 ›
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(Math.ceil(filteredMembers.length / itemsPerPage))}
+                                        disabled={currentPage >= Math.ceil(filteredMembers.length / itemsPerPage)}
+                                        className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        »»
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -595,6 +885,26 @@ export default function MembersManagementPage() {
                                 <p className="text-xs text-gray-500 mt-1">
                                     목사/장로 → 정회원, 전도사/교인 → 일반회원 자동 설정
                                 </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">구분</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                >
+                                    <option value="">선택하세요</option>
+                                    <option value="원로">원로</option>
+                                    <option value="위임">위임</option>
+                                    <option value="시무">시무</option>
+                                    <option value="부목사">부목사</option>
+                                    <option value="전도사">전도사</option>
+                                    <option value="장로">장로</option>
+                                    <option value="은퇴">은퇴</option>
+                                    <option value="무임">무임</option>
+                                    <option value="선교사">선교사</option>
+                                    <option value="기타">기타</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">연락처</label>
@@ -715,6 +1025,26 @@ export default function MembersManagementPage() {
                                 </p>
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">구분</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                >
+                                    <option value="">선택하세요</option>
+                                    <option value="원로">원로</option>
+                                    <option value="위임">위임</option>
+                                    <option value="시무">시무</option>
+                                    <option value="부목사">부목사</option>
+                                    <option value="전도사">전도사</option>
+                                    <option value="장로">장로</option>
+                                    <option value="은퇴">은퇴</option>
+                                    <option value="무임">무임</option>
+                                    <option value="선교사">선교사</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">연락처</label>
                                 <input
                                     type="text"
@@ -821,19 +1151,38 @@ export default function MembersManagementPage() {
                                     선택된 파일: <strong>{csvFile.name}</strong>
                                 </div>
                             )}
+
+                            {/* Progress Bar */}
+                            {isImporting && (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">{importStatus}</span>
+                                        <span className="font-medium text-primary-blue">{importProgress}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                        <div
+                                            className="bg-gradient-to-r from-blue-500 to-primary-blue h-full rounded-full transition-all duration-300 ease-out"
+                                            style={{ width: `${importProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex gap-3 pt-4">
                                 <button
-                                    onClick={handleImportCSV}
-                                    className="flex-1 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                    onClick={openOverwriteModal}
+                                    disabled={isImporting}
+                                    className="flex-1 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50"
                                 >
-                                    가져오기
+                                    {isImporting ? '가져오는 중...' : '덮어쓰기로 가져오기'}
                                 </button>
                                 <button
                                     onClick={() => {
                                         setIsImportModalOpen(false)
                                         setCsvFile(null)
                                     }}
-                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold"
+                                    disabled={isImporting}
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold disabled:opacity-50"
                                 >
                                     취소
                                 </button>
@@ -901,6 +1250,98 @@ export default function MembersManagementPage() {
                                         삭제 중...
                                     </span>
                                 ) : '삭제'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete All Confirmation Modal */}
+            {isDeleteAllModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setIsDeleteAllModalOpen(false)}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                        <div className="flex items-center gap-4 p-6 border-b border-gray-100">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900">전체 삭제</h3>
+                                <p className="text-sm text-gray-500">모든 회원 데이터를 삭제합니다</p>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-gray-700 mb-4">
+                                정말로 <span className="font-bold text-red-600">모든 회원 데이터</span>를 삭제하시겠습니까?
+                            </p>
+                            <p className="text-sm text-gray-500 bg-yellow-50 p-3 rounded-lg">
+                                ⚠️ <strong>admin</strong>, <strong>master</strong> 계정은 삭제되지 않습니다.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 p-6 bg-gray-50 border-t border-gray-100">
+                            <button
+                                onClick={() => setIsDeleteAllModalOpen(false)}
+                                className="flex-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleDeleteAll}
+                                disabled={isDeletingAll}
+                                className="flex-1 px-4 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 font-medium disabled:opacity-50"
+                            >
+                                {isDeletingAll ? '삭제 중...' : '전체 삭제'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Overwrite Confirmation Modal */}
+            {isOverwriteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setIsOverwriteModalOpen(false)}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                        <div className="flex items-center gap-4 p-6 border-b border-gray-100">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900">데이터 덮어쓰기</h3>
+                                <p className="text-sm text-gray-500">기존 데이터를 삭제하고 새 데이터로 교체합니다</p>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-gray-700 mb-4">
+                                기존 회원 데이터를 <span className="font-bold text-orange-600">모두 삭제</span>하고
+                                <span className="font-bold text-blue-600"> CSV 파일의 데이터</span>로 교체하시겠습니까?
+                            </p>
+                            <p className="text-sm text-gray-500 bg-yellow-50 p-3 rounded-lg">
+                                ⚠️ <strong>admin</strong>, <strong>master</strong> 계정은 삭제되지 않습니다.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 p-6 bg-gray-50 border-t border-gray-100">
+                            <button
+                                onClick={() => setIsOverwriteModalOpen(false)}
+                                className="flex-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleOverwriteImport}
+                                className="flex-1 px-4 py-2.5 text-white bg-orange-600 rounded-lg hover:bg-orange-700 font-medium"
+                            >
+                                덮어쓰기
                             </button>
                         </div>
                     </div>

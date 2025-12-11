@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcrypt';
 
 // POST: CSV Import Members
 export async function POST(request: NextRequest) {
@@ -24,24 +25,41 @@ export async function POST(request: NextRequest) {
         }
 
         let count = 0;
+        let skipped = 0;
 
         for (const member of members) {
-            const { name, churchName, position, role } = member;
+            const { name, churchName, position, category, phone, role, username, password } = member;
 
             if (!name) continue;
 
+            // Check for duplicate username
+            const existingUser = await prisma.user.findUnique({
+                where: { username: username }
+            });
+
+            if (existingUser) {
+                console.log(`Skipped duplicate username: ${username}`);
+                skipped++;
+                continue;
+            }
+
             try {
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(password || '123456', 10);
+
                 await prisma.user.create({
                     data: {
-                        username: `${name}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Generate unique username
-                        password: '$2a$10$PlaceholderPasswordForCSVImport', // Placeholder password
+                        username: username || `${name}_4214`,
+                        password: hashedPassword,
                         name: name,
                         email: null,
-                        phone: '',
+                        phone: phone || '010-0000-0000',
                         churchName: churchName || '',
                         position: position || '',
+                        category: category || null,
                         role: role || 'member',
                         isApproved: true,
+                        approvedAt: new Date()
                     },
                 });
                 count++;

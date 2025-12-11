@@ -58,7 +58,7 @@ export async function PUT(
         const { id } = await params;
         const userId = parseInt(id);
         const body = await request.json();
-        const { name, phone, email, churchName, position, role, password, rejectedReason, rejectedAt, isApproved } = body;
+        const { name, phone, email, churchName, position, category, role, password, rejectedReason, rejectedAt, isApproved } = body;
 
         const updateData: any = {};
 
@@ -67,6 +67,7 @@ export async function PUT(
         if (email !== undefined) updateData.email = email || null;
         if (churchName) updateData.churchName = churchName;
         if (position) updateData.position = position;
+        if (category !== undefined) updateData.category = category || null;
         if (role) updateData.role = role;
         if (isApproved !== undefined) updateData.isApproved = isApproved;
 

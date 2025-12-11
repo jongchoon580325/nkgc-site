@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
                 name: true,
                 churchName: true,
                 position: true,
+                category: true,
                 phone: true,
                 role: true,
                 isApproved: true,
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { username, password, name, churchName, position, phone, role } = body;
+        const { username, password, name, churchName, position, category, phone, role } = body;
 
         // 필수 항목 검증
         if (!username || !password || !name || !churchName || !position) {
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
                 name,
                 churchName,
                 position,
+                category: category || null,
                 phone: phone || '010-0000-0000',
                 role: finalRole,
                 isApproved: true,
@@ -128,6 +130,7 @@ export async function POST(request: NextRequest) {
                 name: true,
                 churchName: true,
                 position: true,
+                category: true,
                 phone: true,
                 role: true,
                 createdAt: true

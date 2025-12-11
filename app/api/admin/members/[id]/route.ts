@@ -2,6 +2,51 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
+// GET: 단일 회원 조회
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const memberId = parseInt(id);
+
+        const member = await prisma.user.findUnique({
+            where: { id: memberId },
+            select: {
+                id: true,
+                username: true,
+                name: true,
+                churchName: true,
+                position: true,
+                category: true,
+                phone: true,
+                role: true,
+                isApproved: true,
+                createdAt: true
+            }
+        });
+
+        if (!member) {
+            return NextResponse.json(
+                { success: false, error: '회원을 찾을 수 없습니다.' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: member
+        });
+    } catch (error) {
+        console.error('회원 조회 오류:', error);
+        return NextResponse.json(
+            { success: false, error: '회원 정보를 불러올 수 없습니다.' },
+            { status: 500 }
+        );
+    }
+}
+
 // PUT: 회원 정보 수정
 export async function PUT(
     request: NextRequest,
@@ -11,7 +56,7 @@ export async function PUT(
         const { id } = await params;
         const memberId = parseInt(id);
         const body = await request.json();
-        const { name, churchName, position, phone, role, password, username } = body;
+        const { name, churchName, position, category, phone, role, password, username } = body;
 
         // 필수 항목 검증
         if (!name || !churchName || !position || !phone) {
@@ -37,6 +82,11 @@ export async function PUT(
             position,
             phone
         };
+
+        // category가 제공된 경우 업데이트
+        if (category !== undefined) {
+            updateData.category = category || null;
+        }
 
         // role이 제공된 경우에만 업데이트
         if (role) {

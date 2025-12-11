@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
                 email: true,
                 churchName: true,
                 position: true,
+                category: true,
                 role: true,
                 isApproved: true,
                 createdAt: true,

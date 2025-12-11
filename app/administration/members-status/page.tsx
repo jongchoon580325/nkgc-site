@@ -9,6 +9,7 @@ interface Member {
     name: string
     churchName: string
     position: string
+    category: string | null
     phone: string
     role: string
 }
@@ -157,8 +158,9 @@ export default function MembersStatusPage() {
                                                 <tr className="bg-gray-100 border-b">
                                                     <th className="px-6 py-4 text-left font-bold text-gray-700">번호</th>
                                                     <th className="px-6 py-4 text-left font-bold text-gray-700">이름</th>
-                                                    <th className="px-6 py-4 text-left font-bold text-gray-700">교회명</th>
                                                     <th className="px-6 py-4 text-left font-bold text-gray-700">직분</th>
+                                                    <th className="px-6 py-4 text-left font-bold text-gray-700">구분</th>
+                                                    <th className="px-6 py-4 text-left font-bold text-gray-700">교회명</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -175,10 +177,15 @@ export default function MembersStatusPage() {
                                                             {member.name}
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-800">
-                                                            {member.churchName}
+                                                            {member.position}
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-800">
-                                                            {member.position}
+                                                            {member.position === '장로'
+                                                                ? (member.category === '장로' ? '시무장로' : `${member.category || '시무'}장로`)
+                                                                : (member.category || '-')}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-800">
+                                                            {member.churchName}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -200,14 +207,20 @@ export default function MembersStatusPage() {
                                                 </div>
                                                 <div className="space-y-2 text-sm">
                                                     <div className="flex">
-                                                        <span className="text-gray-500 w-20 flex-shrink-0">교회명:</span>
-                                                        <span className="text-gray-900 font-medium">
-                                                            {member.churchName}
+                                                        <span className="text-gray-500 w-20 flex-shrink-0">직분:</span>
+                                                        <span className="text-gray-900 font-medium">{member.position}</span>
+                                                    </div>
+                                                    <div className="flex">
+                                                        <span className="text-gray-500 w-20 flex-shrink-0">구분:</span>
+                                                        <span className="text-gray-900">
+                                                            {member.position === '장로'
+                                                                ? (member.category === '장로' ? '시무장로' : `${member.category || '시무'}장로`)
+                                                                : (member.category || '-')}
                                                         </span>
                                                     </div>
                                                     <div className="flex">
-                                                        <span className="text-gray-500 w-20 flex-shrink-0">직분:</span>
-                                                        <span className="text-gray-900">{member.position}</span>
+                                                        <span className="text-gray-500 w-20 flex-shrink-0">교회명:</span>
+                                                        <span className="text-gray-900">{member.churchName}</span>
                                                     </div>
                                                 </div>
                                             </div>
