@@ -699,24 +699,42 @@ export default function MembersManagementPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">직분</label>
-                                <input
-                                    type="text"
+                                <select
                                     value={formData.position}
-                                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                                    onChange={(e) => handlePositionChange(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
                                     required
+                                >
+                                    <option value="목사">목사</option>
+                                    <option value="장로">장로</option>
+                                    <option value="전도사">전도사</option>
+                                    <option value="교인">교인</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    목사/장로 → 정회원, 전도사/교인 → 일반회원 자동 설정
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                                <input
+                                    type="text"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
+                                    required
+                                    placeholder="010-0000-0000"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">구분</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">회원권한</label>
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
                                     required
                                 >
-                                    <option value="pastor">목사</option>
-                                    <option value="elder">장로</option>
+                                    <option value="member">정회원 (글쓰기, 보기)</option>
+                                    <option value="guest">일반회원 (보기만)</option>
                                 </select>
                             </div>
 
@@ -733,6 +751,9 @@ export default function MembersManagementPage() {
                                             required
                                             placeholder="로그인에 사용할 아이디"
                                         />
+                                        <p className="text-xs text-blue-500 mt-1">
+                                            아이디는 로그인 시 사용됩니다.
+                                        </p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 <span className="text-red-500">*</span></label>
@@ -744,6 +765,9 @@ export default function MembersManagementPage() {
                                             required
                                             placeholder="비밀번호 설정"
                                         />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            보안을 위해 8자 이상 권장합니다.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

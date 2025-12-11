@@ -51,6 +51,14 @@ export default function GallerySettingsPage() {
     const [settings, setSettings] = useState<GallerySettings>(DEFAULT_SETTINGS);
     const [posts, setPosts] = useState<GalleryPost[]>([]);
     const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    // Backup states
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [importMode, setImportMode] = useState<'merge' | 'overwrite'>('merge');
+    const [isExporting, setIsExporting] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -145,6 +153,74 @@ export default function GallerySettingsPage() {
         }
     };
 
+    const showMessage = (type: 'success' | 'error', text: string) => {
+        setMessage({ type, text });
+        setTimeout(() => setMessage(null), 3000);
+    };
+
+    // 내보내기 (ZIP)
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const response = await fetch('/api/admin/gallery/backup');
+            if (!response.ok) throw new Error('Export failed');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gallery_backup_${new Date().toISOString().split('T')[0]}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showMessage('success', '사진자료실 데이터를 내보냈습니다. (JSON + 이미지 ZIP)');
+        } catch (error) {
+            console.error('Export error:', error);
+            showMessage('error', '내보내기 중 오류가 발생했습니다.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    // 가져오기 (ZIP)
+    const handleImport = async () => {
+        if (!importFile) {
+            showMessage('error', '파일을 선택해주세요.');
+            return;
+        }
+
+        setIsImporting(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', importFile);
+            formData.append('mode', importMode);
+            formData.append('authorId', String((session?.user as any)?.id || 1));
+
+            const response = await fetch('/api/admin/gallery/backup', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('success', result.message);
+                setShowImportModal(false);
+                setImportFile(null);
+                fetchPosts();
+            } else {
+                showMessage('error', result.error || '가져오기에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            showMessage('error', '가져오기 중 오류가 발생했습니다.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
     if (status === 'loading' || loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -155,7 +231,30 @@ export default function GallerySettingsPage() {
 
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6">사진자료실 관리</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">사진자료실 관리</h1>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm disabled:opacity-50"
+                    >
+                        {isExporting ? '내보내는 중...' : '📤 내보내기 (ZIP)'}
+                    </button>
+                    <button
+                        onClick={() => setShowImportModal(true)}
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold text-sm"
+                    >
+                        📥 가져오기
+                    </button>
+                </div>
+            </div>
+
+            {message && (
+                <div className={`p-4 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                    {message.text}
+                </div>
+            )}
 
             {/* Settings Section */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -338,6 +437,120 @@ export default function GallerySettingsPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Import Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setShowImportModal(false)}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                        <div className="flex items-center gap-4 p-6 border-b border-gray-100">
+                            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                <span className="text-2xl">📥</span>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900">사진자료실 가져오기</h2>
+                                <p className="text-sm text-gray-500">ZIP 파일 (메타데이터 + 이미지)</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    백업 ZIP 파일 선택
+                                </label>
+                                <input
+                                    type="file"
+                                    accept=".zip"
+                                    onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                />
+                                {importFile && (
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        선택됨: {importFile.name} ({(importFile.size / 1024 / 1024).toFixed(2)} MB)
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    가져오기 모드
+                                </label>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="radio"
+                                            name="importMode"
+                                            value="merge"
+                                            checked={importMode === 'merge'}
+                                            onChange={() => setImportMode('merge')}
+                                            className="text-orange-500"
+                                        />
+                                        <div>
+                                            <div className="font-medium">병합 (권장)</div>
+                                            <div className="text-sm text-gray-500">
+                                                기존 데이터 유지, 새 데이터만 추가
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="radio"
+                                            name="importMode"
+                                            value="overwrite"
+                                            checked={importMode === 'overwrite'}
+                                            onChange={() => setImportMode('overwrite')}
+                                            className="text-orange-500"
+                                        />
+                                        <div>
+                                            <div className="font-medium text-red-600">덮어쓰기</div>
+                                            <div className="text-sm text-gray-500">
+                                                ⚠️ 기존 데이터 및 이미지 삭제 후 대체
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {importMode === 'overwrite' && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                                    <p>⚠️ 덮어쓰기 모드는 기존 모든 사진자료실 게시글과 이미지가 삭제됩니다!</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 p-6 pt-0">
+                            <button
+                                onClick={() => {
+                                    setShowImportModal(false);
+                                    setImportFile(null);
+                                }}
+                                disabled={isImporting}
+                                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleImport}
+                                disabled={isImporting || !importFile}
+                                className="flex-1 px-4 py-3 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
+                            >
+                                {isImporting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        가져오는 중...
+                                    </span>
+                                ) : '가져오기'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
