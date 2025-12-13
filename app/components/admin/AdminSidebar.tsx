@@ -21,7 +21,7 @@ interface MenuItem {
 export default function AdminSidebar() {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [expandedMenus, setExpandedMenus] = useState<string[]>(['노회행정', '노회자료']); // 기본적으로 일부 펼쳐둠
+    const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
     const toggleMenu = (name: string) => {
         if (isCollapsed) {
@@ -130,6 +130,17 @@ export default function AdminSidebar() {
             ),
             submenu: [
                 { name: '히어로 관리', href: '/admin/hero' },
+            ]
+        },
+        {
+            name: '미디어 관리',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            submenu: [
+                { name: '통합 라이브러리', href: '/admin/media' },
             ]
         },
         {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 
@@ -31,6 +32,7 @@ interface PostListProps {
 }
 
 export default function PostList({ boardType, showHeader = true }: PostListProps) {
+    const { data: session } = useSession();
     const [posts, setPosts] = useState<Post[]>([]);
     const [allPosts, setAllPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
@@ -40,6 +42,34 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
     const [categories, setCategories] = useState<string[]>([]);
 
     const config = BOARD_CONFIG[boardType];
+    const userRole = (session?.user as any)?.role || '';
+    const userPosition = (session?.user as any)?.position || '';
+
+    // 권한 체크: 글쓰기 버튼 표시 여부
+    const canWrite = useMemo(() => {
+        if (!session) return false;
+
+        // admin/super_admin은 모든 게시판에 글쓰기 가능
+        if (userRole === 'admin' || userRole === 'super_admin') return true;
+
+        // 목사/장로 직분은 정회원으로 간주
+        const isMember = userRole === 'member' ||
+            (userPosition && (userPosition.includes('목사') || userPosition === '장로'));
+        const isGuest = userRole === 'guest';
+
+        // 게시판별 권한 체크
+        // admin만: FORM_ADMIN, FORM_SELF, GALLERY, VIDEO, NOTICE, EXAM_DEPT, EXAM_USER
+        const adminOnlyBoards = ['FORM_ADMIN', 'FORM_SELF', 'GALLERY', 'VIDEO', 'NOTICE', 'EXAM_DEPT', 'EXAM_USER'];
+        if (adminOnlyBoards.includes(boardType)) return false;
+
+        // admin + 정회원: MEMBER
+        if (boardType === 'MEMBER') return isMember;
+
+        // admin + 정회원 + 일반회원: FREE
+        if (boardType === 'FREE') return isMember || isGuest;
+
+        return false;
+    }, [session, userRole, userPosition, boardType]);
 
     useEffect(() => {
         fetchPosts();
@@ -161,12 +191,14 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
                     )}
                 </div>
 
-                <Link
-                    href={`/board/${boardType}/write`}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-                >
-                    글쓰기
-                </Link>
+                {canWrite && (
+                    <Link
+                        href={`/board/${boardType}/write`}
+                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                    >
+                        글쓰기
+                    </Link>
+                )}
             </div>
 
             {/* 게시글 목록 테이블 (조회 컬럼 삭제됨) */}
@@ -233,21 +265,10 @@ export default function PostList({ boardType, showHeader = true }: PostListProps
 
             {/* Action Buttons Group */}
             <div className="mt-6 flex justify-end gap-3">
-                {/* Back to Main Exam Page Button (only for EXAM_DEPT and EXAM_USER when showHeader is true) */}
-                {showHeader && (boardType === 'EXAM_DEPT' || boardType === 'EXAM_USER') && (
-                    <Link
-                        href="/board/exam"
-                        className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        고시부 전체자료실로 가기
-                    </Link>
-                )}
+
 
                 {/* Write Button */}
-                {config.writePermission !== 'admin' && (
+                {canWrite && (
                     <Link
                         href={`/board/${boardType}/write`}
                         className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"

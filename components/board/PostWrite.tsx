@@ -6,8 +6,12 @@ import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
-import FileUploader from './FileUploader';
+// import FileUploader from './FileUploader'; // Deprecated
 import TiptapEditor from './TiptapEditor';
+import MediaPickerModal from '@/components/media/MediaPickerModal';
+import NotificationModal from '@/app/components/common/NotificationModal';
+import Image from 'next/image';
+import { getFileIcon, isImage } from '@/lib/utils/media';
 
 interface PostWriteProps {
     boardType: BoardType;
@@ -18,7 +22,11 @@ export default function PostWrite({ boardType }: PostWriteProps) {
     const [content, setContent] = useState('');
     const [category, setCategory] = useState('');
     const [isNotice, setIsNotice] = useState(false);
-    const [files, setFiles] = useState<File[]>([]);
+
+    // New Attachments State (IMMS)
+    const [attachedAssets, setAttachedAssets] = useState<any[]>([]);
+    const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+
     const [categories, setCategories] = useState<string[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [honeypot, setHoneypot] = useState('');
@@ -32,6 +40,27 @@ export default function PostWrite({ boardType }: PostWriteProps) {
     const config = BOARD_CONFIG[boardType];
     const userRole = session?.user?.role;
     const isAdmin = userRole === 'admin' || userRole === 'ADMIN';
+
+    // Modal State
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        isDestructive: false,
+        type: 'alert' as 'alert' | 'confirm'
+    });
+
+    const showAlert = (title: string, message: string) => {
+        setModal({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: () => setModal(prev => ({ ...prev, isOpen: false })),
+            isDestructive: false,
+            type: 'alert'
+        });
+    };
 
     // Get returnUrl from query params
     const returnUrl = searchParams.get('returnUrl');
@@ -61,37 +90,39 @@ export default function PostWrite({ boardType }: PostWriteProps) {
         }
     };
 
-    const handleFilesChange = (selectedFiles: File[]) => {
-        setFiles(selectedFiles);
-    };
+    const handleMediaSelect = (selectedAssets: any[]) => {
+        // Filter out duplicates based on ID
+        const newAssets = selectedAssets.filter(
+            newItem => !attachedAssets.some(existing => existing.id === newItem.id)
+        );
+        setAttachedAssets(prev => [...prev, ...newAssets]);
 
-    const uploadFiles = async (): Promise<any[]> => {
-        const uploadedFiles = [];
+        // Auto-insert images into editor content
+        let contentToAdd = '';
+        newAssets.forEach(asset => {
+            if (isImage(asset.mimeType)) {
+                contentToAdd += `<img src="${asset.path}" alt="${asset.altText || asset.filename}" />`;
+            }
+        });
 
-        for (const file of files) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!res.ok) throw new Error('File upload failed');
-
-            const data = await res.json();
-            uploadedFiles.push(data);
+        if (contentToAdd) {
+            // Append to existing content (add a newline if needed)
+            setContent(prev => prev + (prev ? '<p></p>' : '') + contentToAdd);
         }
-
-        return uploadedFiles;
     };
+
+    const removeAttachment = (id: string) => {
+        setAttachedAssets(prev => prev.filter(a => a.id !== id));
+    };
+
+    // Legacy upload function removed.
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Validation
         if (!title.trim() || !content.trim()) {
-            alert('제목과 내용을 입력해주세요.');
+            showAlert('입력 오류', '제목과 내용을 입력해주세요.');
             return;
         }
 
@@ -99,15 +130,20 @@ export default function PostWrite({ boardType }: PostWriteProps) {
         if (honeypot) return; // Bot detected
         const elapsedTime = Date.now() - pageLoadTime;
         if (elapsedTime < 3000) {
-            alert('너무 빨리 제출되었습니다. 잠시 후 다시 시도해주세요.');
+            showAlert('작성 제한', '너무 빨리 제출되었습니다. 잠시 후 다시 시도해주세요.');
             return;
         }
 
         setSubmitting(true);
 
         try {
-            // 1. Upload files first
-            const uploadedAttachments = await uploadFiles();
+            // 1. Prepare attachments (Map FileAsset to Attachment format)
+            const attachments = attachedAssets.map(asset => ({
+                fileName: asset.filename,
+                fileUrl: asset.path,
+                fileSize: asset.size,
+                mimeType: asset.mimeType
+            }));
 
             // 2. Create post
             const res = await fetch('/api/posts', {
@@ -119,7 +155,7 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                     boardType,
                     category,
                     isNotice,
-                    attachments: uploadedAttachments,
+                    attachments: attachments,
                     authorName, // 작성자 이름 추가
                 }),
             });
@@ -130,12 +166,16 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                 router.push(redirectUrl);
                 router.refresh();
             } else {
-                const data = await res.json();
-                alert(data.error || '글 작성에 실패했습니다.');
+                try {
+                    const data = await res.json();
+                    showAlert('작성 실패', data.error || '글 작성에 실패했습니다.');
+                } catch (e) {
+                    showAlert('작성 실패', '글 작성에 실패했습니다.');
+                }
             }
         } catch (error) {
             console.error('Error creating post:', error);
-            alert('오류가 발생했습니다.');
+            showAlert('오류', '오류가 발생했습니다.');
         } finally {
             setSubmitting(false);
         }
@@ -273,8 +313,78 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                             />
                         </div>
 
-                        {/* 첨부파일 */}
-                        <FileUploader onFilesChange={handleFilesChange} />
+                        {/* 첨부파일 (IMMS) */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="block text-sm font-medium">첨부파일</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMediaPickerOpen(true)}
+                                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium flex items-center gap-2 transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    파일 추가 (미디어 라이브러리)
+                                </button>
+                            </div>
+
+                            {/* Attachments List */}
+                            {attachedAssets.length > 0 && (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {attachedAssets.map((asset) => (
+                                        <div key={asset.id} className="relative group border rounded-lg bg-gray-50 p-2 flex flex-col gap-2">
+                                            {/* Preview */}
+                                            <div className="aspect-video relative rounded bg-gray-200 overflow-hidden flex items-center justify-center">
+                                                {isImage(asset.mimeType) ? (
+                                                    <Image
+                                                        src={asset.path}
+                                                        alt={asset.filename}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="200px"
+                                                    />
+                                                ) : (
+                                                    <span className="text-3xl">{getFileIcon(asset.mimeType)}</span>
+                                                )}
+                                            </div>
+
+                                            {/* Info */}
+                                            <div className="text-xs text-gray-600 truncate px-1">
+                                                {asset.filename}
+                                            </div>
+
+                                            {/* Delete Button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(asset.id)}
+                                                className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="삭제"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {attachedAssets.length === 0 && (
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500 bg-gray-50/50">
+                                    <p className="text-sm">첨부된 파일이 없습니다.</p>
+                                    <p className="text-xs text-gray-400 mt-1">'파일 추가' 버튼을 눌러 이미지를 선택하세요.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Media Picker Modal */}
+                        <MediaPickerModal
+                            isOpen={isMediaPickerOpen}
+                            onClose={() => setIsMediaPickerOpen(false)}
+                            onSelect={handleMediaSelect}
+                            selectionMode="multiple"
+                        />
 
                         {/* 버튼 */}
                         <div className="flex gap-2 justify-end pt-4">
@@ -296,6 +406,15 @@ export default function PostWrite({ boardType }: PostWriteProps) {
                     </form>
                 </div>
             </div>
+            <NotificationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+                title={modal.title}
+                message={modal.message}
+                type={modal.type}
+                onConfirm={modal.onConfirm}
+                isDestructive={modal.isDestructive}
+            />
         </main>
     );
 }

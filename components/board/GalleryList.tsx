@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
 
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS: GallerySettings = {
 };
 
 export default function GalleryList({ boardType }: GalleryListProps) {
+    const { data: session } = useSession();
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -59,6 +61,13 @@ export default function GalleryList({ boardType }: GalleryListProps) {
 
     const searchParams = useSearchParams();
     const config = BOARD_CONFIG[boardType];
+    const userRole = (session?.user as any)?.role || '';
+
+    // 권한 체크: GALLERY, VIDEO는 admin만 글쓰기 가능
+    const canWrite = useMemo(() => {
+        if (!session) return false;
+        return userRole === 'admin' || userRole === 'super_admin';
+    }, [session, userRole]);
 
     useEffect(() => {
         fetchSettings();
@@ -220,14 +229,16 @@ export default function GalleryList({ boardType }: GalleryListProps) {
             {/* Content Section */}
             <div className="container mx-auto px-6 py-12">
                 <div className="bg-white rounded-2xl shadow-lg p-8">
-                    <div className="mb-6 flex justify-end">
-                        <Link
-                            href={`/board/${boardType}/write`}
-                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-                        >
-                            글쓰기
-                        </Link>
-                    </div>
+                    {canWrite && (
+                        <div className="mb-6 flex justify-end">
+                            <Link
+                                href={`/board/${boardType}/write`}
+                                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                            >
+                                글쓰기
+                            </Link>
+                        </div>
+                    )}
 
                     {/* 갤러리 그리드 */}
                     {posts.length === 0 ? (

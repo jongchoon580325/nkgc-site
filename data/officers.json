@@ -3,59 +3,66 @@
   "officers": [
     {
       "position": "노회장",
-      "name": "정영교",
+      "name": "유병구",
       "title": "목사",
-      "church": "산본양문교회",
-      "photo": "/images/president-1763897760846.png"
+      "church": "사랑하는교회",
+      "photo": "/uploads/2025/12/b0a959f2-moonbogil_photo.webp"
     },
     {
-      "position": "부노회장",
-      "name": "나종춘",
+      "position": "부노회장(목사)",
+      "name": "김   구",
       "title": "목사",
-      "church": "대유평교회",
+      "church": "서광교회",
+      "photo": "/uploads/2025/12/25955024-3234-427c-a8f3-d75a33aa504a.png"
+    },
+    {
+      "position": "부노회장(장로)",
+      "name": "정현진",
+      "title": "장로",
+      "church": "산본양문교회",
       "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "서기",
       "name": "문보길",
       "title": "목사",
-      "church": "",
-      "photo": ""
+      "church": "샘물교회",
+      "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "부서기",
-      "name": "박수규",
+      "name": "김형석",
       "title": "목사",
-      "church": "사랑의교회",
-      "photo": ""
+      "church": "예안교회",
+      "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "회록서기",
-      "name": "",
-      "title": "",
-      "church": "",
-      "photo": ""
+      "name": "박수규",
+      "title": "목사",
+      "church": "사랑의교회",
+      "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "부회록서기",
-      "name": "",
-      "title": "",
-      "church": "",
-      "photo": ""
+      "name": "박광현",
+      "title": "목사",
+      "church": "참빛교회",
+      "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "회계",
       "name": "박형근",
       "title": "장로",
       "church": "안양동성교회",
-      "photo": ""
+      "photo": "/images/president-1763897750073.png"
     },
     {
       "position": "부회계",
       "name": "김재관",
       "title": "장로",
       "church": "삼흥교회",
-      "photo": ""
+      "photo": "/uploads/2025/12/48327c70-________.webp"
     }
   ]
 }

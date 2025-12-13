@@ -27,7 +27,8 @@ export default function AdminCurrentOfficersPage() {
 
     const defaultPositions = [
         '노회장',
-        '부노회장',
+        '부노회장(목사)',
+        '부노회장(장로)',
         '서기',
         '부서기',
         '회록서기',
@@ -77,6 +78,55 @@ export default function AdminCurrentOfficersPage() {
         if (confirm('이 임원을 삭제하시겠습니까?')) {
             const newOfficers = data.officers.filter((_, i) => i !== index);
             setData({ ...data, officers: newOfficers });
+        }
+    };
+
+    const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+
+    const handlePhotoUpload = async (index: number, file: File) => {
+        setUploadingIndex(index);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/media/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                handleOfficerChange(index, 'photo', result.fileUrl);
+            } else {
+                alert('❌ 사진 업로드 실패');
+            }
+        } catch (error) {
+            alert('❌ 업로드 중 오류 발생');
+        } finally {
+            setUploadingIndex(null);
+        }
+    };
+
+    const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                handlePhotoUpload(index, file);
+            } else {
+                alert('이미지 파일만 업로드 가능합니다.');
+            }
+        }
+    };
+
+    const handleFileSelect = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            handlePhotoUpload(index, files[0]);
         }
     };
 
@@ -225,7 +275,6 @@ export default function AdminCurrentOfficersPage() {
                                             <option value="">선택하세요</option>
                                             <option value="목사">목사</option>
                                             <option value="장로">장로</option>
-                                            <option value="전도사">전도사</option>
                                         </select>
                                     </div>
 
@@ -245,20 +294,56 @@ export default function AdminCurrentOfficersPage() {
                                         />
                                     </div>
 
-                                    {/* Photo URL */}
+                                    {/* Photo Upload */}
                                     <div className="lg:col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            사진 URL
+                                            사진
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={officer.photo}
-                                            onChange={(e) =>
-                                                handleOfficerChange(index, 'photo', e.target.value)
-                                            }
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue"
-                                            placeholder="/images/officers/name.jpg"
-                                        />
+                                        <div className="flex gap-4 items-start">
+                                            {/* Preview */}
+                                            {officer.photo && (
+                                                <div className="flex-shrink-0">
+                                                    <img
+                                                        src={officer.photo}
+                                                        alt="미리보기"
+                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Drop Zone */}
+                                            <div
+                                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                onDrop={(e) => handleDrop(index, e)}
+                                                onClick={() => document.getElementById(`photo-input-${index}`)?.click()}
+                                                className={`flex-1 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${uploadingIndex === index
+                                                    ? 'border-blue-400 bg-blue-50'
+                                                    : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                                                    }`}
+                                            >
+                                                <input
+                                                    id={`photo-input-${index}`}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileSelect(index, e)}
+                                                />
+                                                {uploadingIndex === index ? (
+                                                    <div className="flex items-center justify-center gap-2 text-blue-600">
+                                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                                        <span>업로드 중...</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-gray-500">
+                                                        <div className="text-2xl mb-1">📷</div>
+                                                        <p className="text-sm">사진을 드래그하거나 클릭하여 업로드</p>
+                                                        {officer.photo && (
+                                                            <p className="text-xs text-gray-400 mt-1 truncate">{officer.photo}</p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

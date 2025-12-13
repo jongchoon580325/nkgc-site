@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { BoardType, BOARD_CONFIG } from '@/lib/board-config';
 import PageHeader from '@/app/components/common/PageHeader';
+import NotificationModal from '@/app/components/common/NotificationModal';
 
 interface Post {
     id: number;
@@ -60,6 +61,41 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
     const searchParams = useSearchParams();
     const { data: session } = useSession();
 
+    // Modal State
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        isDestructive: false,
+        type: 'alert' as 'alert' | 'confirm'
+    });
+
+    const showAlert = (title: string, message: string) => {
+        setModal({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: () => setModal(prev => ({ ...prev, isOpen: false })),
+            isDestructive: false,
+            type: 'alert'
+        });
+    };
+
+    const showConfirm = (title: string, message: string, onConfirm: () => void, isDestructive = false) => {
+        setModal({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: () => {
+                onConfirm();
+                setModal(prev => ({ ...prev, isOpen: false }));
+            },
+            isDestructive,
+            type: 'confirm'
+        });
+    };
+
     const from = searchParams.get('from');
     const listLink = from === 'admin' ? '/admin/gallery-settings' : `/board/${boardType}`;
 
@@ -83,24 +119,50 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
     };
 
     const handleDelete = async () => {
-        if (!confirm('정말 삭제하시겠습니까?')) return;
+        showConfirm(
+            '게시글 삭제',
+            '정말 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.',
+            async () => {
+                try {
+                    const res = await fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE',
+                    });
 
-        try {
-            const res = await fetch(`/api/posts/${postId}`, {
-                method: 'DELETE',
-            });
+                    if (res.ok) {
+                        // showConfirm의 내부 onConfirm에서 모달을 닫으므로, alert 대신 모달을 다시 띄우지 않고 바로 이동하거나,
+                        // UX상 삭제 완료 알림을 띄우고 이동할 수 있음. 
+                        // 여기서는 router.push가 있기 때문에 Alert을 띄우고 확인 시 이동하는게 좋음.
+                        // 하지만 비동기 처리 상 모달이 닫힌 후 다시 열어야 함.
 
-            if (res.ok) {
-                alert('삭제되었습니다.');
-                router.push(`/board/${boardType}`);
-            } else {
-                const data = await res.json();
-                alert(data.error || '삭제 실패');
-            }
-        } catch (error) {
-            console.error('Error deleting post:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-        }
+                        // 약간의 딜레이를 주거나, 별도 상태 관리 없이 바로 이동하면 사용자 경험이 빠름.
+                        // 사용자의 명시적 확인을 위해 alert 모달을 띄우고 확인 누르면 이동.
+
+                        // Note: setState batching / async might clash if immediately showing another modal.
+                        // But NotificationModal implementation is simple.
+
+                        // Let's use a workaround: The confirm modal closes. We set a new modal for success.
+                        // Waiting a tick might be needed if they share state (which they do).
+                        setTimeout(() => {
+                            setModal({
+                                isOpen: true,
+                                title: '삭제 완료',
+                                message: '게시글이 삭제되었습니다.',
+                                type: 'alert',
+                                isDestructive: false,
+                                onConfirm: () => router.push(listLink)
+                            });
+                        }, 100);
+                    } else {
+                        const data = await res.json();
+                        setTimeout(() => showAlert('삭제 실패', data.error || '삭제 실패'), 100);
+                    }
+                } catch (error) {
+                    console.error('Error deleting post:', error);
+                    setTimeout(() => showAlert('오류', '삭제 중 오류가 발생했습니다.'), 100);
+                }
+            },
+            true
+        );
     };
 
     if (loading) {
@@ -173,6 +235,19 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
                                 }
                                 .post-content iframe {
                                     max-width: 100%;
+                                }
+                                .post-content ul {
+                                    list-style-type: disc;
+                                    padding-left: 1.5em;
+                                    margin-bottom: 1em;
+                                }
+                                .post-content ol {
+                                    list-style-type: decimal;
+                                    padding-left: 1.5em;
+                                    margin-bottom: 1em;
+                                }
+                                .post-content li {
+                                    margin-bottom: 0.5em;
                                 }
                             `}</style>
                         </div>
@@ -250,6 +325,17 @@ export default function PostDetail({ boardType, postId }: PostDetailProps) {
                     )}
                 </div>
             </div>
-        </main>
+
+
+            <NotificationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+                title={modal.title}
+                message={modal.message}
+                type={modal.type}
+                onConfirm={modal.onConfirm}
+                isDestructive={modal.isDestructive}
+            />
+        </main >
     );
 }

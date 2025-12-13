@@ -246,3 +246,59 @@ model HeroConfig {
   @@index([isActive])
   @@map("hero_configs")
 }
+
+// --- IMMS (통합 미디어 관리 시스템) ---
+
+model MediaFolder {
+  id        String   @id @default(uuid())
+  name      String
+  
+  // Hierarchy
+  parentId  String?  @map("parent_id")
+  parent    MediaFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  MediaFolder[] @relation("FolderHierarchy")
+
+  // Content
+  assets    FileAsset[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, parentId])
+  @@map("media_folders")
+}
+
+model FileAsset {
+  id          String   @id @default(uuid())
+  
+  // Metadata
+  filename    String
+  storedName  String   @unique @map("stored_name")
+  mimeType    String   @map("mime_type")
+  size        Int
+  
+  // Image Specifics
+  width       Int?
+  height      Int?
+
+  // New Metadata Fields (Phase 3.5)
+  altText     String?  @map("alt_text") // 대체 텍스트 (접근성)
+  caption     String?  // 캡션 (이미지 하단 설명)
+  description String?  // 상세 설명 (관리자용 메모)
+  
+  // Storage Context
+  path        String
+  provider    String   // 'local', 's3', 'r2'
+  hash        String?  @unique // SHA-256
+  
+  // Organization
+  folderId    String?  @map("folder_id")
+  folder      MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  
+  uploadedBy   Int?     @map("uploaded_by")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+  
+  @@index([mimeType])
+  @@index([uploadedAt])
+  @@map("file_assets")
+}

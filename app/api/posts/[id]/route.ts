@@ -136,8 +136,9 @@ export async function PATCH(
                     }
                 });
 
-                // 실제 파일 삭제 (비동기로 처리하거나 여기서 처리)
-                // 여기서는 에러가 나도 트랜잭션을 롤백하지 않도록 try-catch 감싸기
+                // 실제 파일 삭제 (IMMS 도입으로 인해 물리 파일 삭제 중단)
+                // 공유된 자산일 수 있으므로 DB 연결만 끊고 파일은 유지함
+                /*
                 for (const file of filesToDelete) {
                     try {
                         // fileUrl이 /uploads/... 로 시작한다고 가정
@@ -154,6 +155,7 @@ export async function PATCH(
                         console.error(`Failed to delete file ${file.fileName}:`, e);
                     }
                 }
+                */
             }
 
             // 3. 새 첨부파일 추가
@@ -213,7 +215,8 @@ export async function DELETE(
             return NextResponse.json({ error: '삭제 권한이 없습니다.' }, { status: 403 });
         }
 
-        // 실제 파일 삭제
+        // 실제 파일 삭제 (IMMS 도입으로 인해 물리 파일 삭제 중단)
+        /*
         for (const file of post.attachments) {
             try {
                 let relativePath = file.fileUrl;
@@ -228,6 +231,7 @@ export async function DELETE(
                 console.error(`Failed to delete file ${file.fileName}:`, e);
             }
         }
+        */
 
         // DB에서 게시글 삭제 (Cascade로 인해 첨부파일, 댓글 등도 자동 삭제됨)
         await prisma.post.delete({

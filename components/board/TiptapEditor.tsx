@@ -11,10 +11,12 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+
 import { Video } from './extensions/Video';
 import { useState, useEffect } from 'react';
 import TurndownService from 'turndown';
 import { marked } from 'marked';
+import MediaPickerModal from '@/components/media/MediaPickerModal';
 
 interface TiptapEditorProps {
     value: string;
@@ -29,6 +31,7 @@ type ViewMode = 'rich' | 'html' | 'markdown';
 export default function TiptapEditor({ value, onChange, placeholder, readOnly, className }: TiptapEditorProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('rich');
     const [localValue, setLocalValue] = useState(value);
+    const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
     const editor = useEditor({
         extensions: [
@@ -126,6 +129,20 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
             }
         };
         input.click();
+    };
+
+    const handleMediaSelect = (selectedAssets: any[]) => {
+        if (!editor) return;
+
+        selectedAssets.forEach(asset => {
+            // Check if it's an image
+            if (asset.mimeType.startsWith('image/')) {
+                editor.chain().focus().setImage({
+                    src: asset.path,
+                    alt: asset.altText || asset.filename
+                }).run();
+            }
+        });
     };
 
     const toggleViewMode = (mode: ViewMode) => {
@@ -285,7 +302,12 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
                     <Button onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="표 삽입">
                         <span className="text-lg">▦</span>
                     </Button>
-                    <Button onClick={handleImageInsert} title="이미지 삽입">
+                    <Button onClick={() => setIsMediaPickerOpen(true)} title="미디어 라이브러리">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </Button>
+                    <Button onClick={handleImageInsert} title="이미지 URL 삽입">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" /></svg>
                     </Button>
                     <Button onClick={handleYouTubeInsert} title="YouTube 영상">
@@ -396,6 +418,14 @@ export default function TiptapEditor({ value, onChange, placeholder, readOnly, c
                     height: auto;
                 }
             `}</style>
+
+            {/* Media Picker Modal */}
+            <MediaPickerModal
+                isOpen={isMediaPickerOpen}
+                onClose={() => setIsMediaPickerOpen(false)}
+                onSelect={handleMediaSelect}
+                selectionMode="multiple"
+            />
         </div>
     );
 }
